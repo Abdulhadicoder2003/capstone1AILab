@@ -345,7 +345,8 @@ tr:hover td{background:rgba(46,159,223,.025);}
     <div class="card">
       <div class="ct">Add paper</div>
       <div class="fgrid">
-        <div class="fg"><label>Title</label><input id="p-ti" placeholder="Paper title"></div>
+        <div class="fg"><label>Title</label><input id="p-ti" placeholder="Paper title" oninput="checkDupTitle(this.value)">
+        <div id="dup-warn" style="font-size:12px;color:var(--red);margin-top:4px;display:none"></div></div>
         <div class="fg"><label>Authors & Year</label><input id="p-au" placeholder="Smith et al. (2023)"></div>
         <div class="fg"><label>Journal</label><input id="p-jo" placeholder="IEEE IoT Journal"></div>
         <div class="fg"><label>Domain</label><input id="p-do" placeholder="Computer Vision / IoT"></div>
@@ -593,14 +594,18 @@ function updateRoleOpts(){
   const hint=document.getElementById('role-hint');
   const hasLeader=users().some(u=>u.role==='leader');
   const hasSup=users().some(u=>u.role==='supervisor');
+  const memberCount=users().filter(u=>u.role==='member').length;
+  const membersFull=memberCount>=3;
   Array.from(sel.options).forEach(o=>{
     if(o.value==='leader'){o.disabled=hasLeader;o.textContent='Team Leader'+(hasLeader?' (taken)':'');}
     if(o.value==='supervisor'){o.disabled=hasSup;o.textContent='Supervisor'+(hasSup?' (taken)':'');}
+    if(o.value==='member'){o.disabled=membersFull;o.textContent='Team Member'+(membersFull?' (full — 3/3)':'');}
   });
-  hint.textContent='';
-  if(hasLeader&&hasSup) hint.textContent='Leader and supervisor are already registered.';
-  else if(hasLeader) hint.textContent='A team leader is already registered.';
-  else if(hasSup) hint.textContent='A supervisor is already registered.';
+  const msgs=[];
+  if(hasLeader) msgs.push('Leader taken');
+  if(hasSup) msgs.push('Supervisor taken');
+  if(membersFull) msgs.push('Members full (3/3)');
+  hint.textContent=msgs.length?msgs.join(' · '):'';
 }
 
 async function step1(){
@@ -613,6 +618,7 @@ async function step1(){
   if(users().find(u=>u.email===em)){err('e1','Email already registered.');return;}
   if(ro==='leader'&&users().some(u=>u.role==='leader')){err('e1','A leader is already registered.');return;}
   if(ro==='supervisor'&&users().some(u=>u.role==='supervisor')){err('e1','A supervisor is already registered.');return;}
+  if(ro==='member'&&users().filter(u=>u.role==='member').length>=3){err('e1','Maximum 3 members allowed. The team is full.');return;}
   reg={firstName:fn,lastName:ln,fullName:fn+' '+ln,email:em,username:un2,role:ro,password:btoa(pw)};
   otp=String(Math.floor(100000+Math.random()*900000));
   document.getElementById('em-show').textContent=em;
@@ -950,8 +956,28 @@ async function delPaperFull(pid){
   cm('mo-paper'); rPap(); rDash();
 }
 
+function checkDupTitle(val){
+  const warn=document.getElementById('dup-warn');
+  if(!warn) return;
+  if(!val.trim()){warn.style.display='none';return;}
+  const dup=papers().find(p=>p.title.trim().toLowerCase()===val.trim().toLowerCase());
+  if(dup){
+    warn.textContent=`⚠ Already added by ${un(dup.addedby)} on ${dup.date}`;
+    warn.style.display='block';
+  } else {
+    warn.style.display='none';
+  }
+}
+
 async function addPaper(){
   const title=g('p-ti');if(!title){alert('Enter paper title.');return;}
+  // Check for duplicate title (case-insensitive)
+  const duplicate=papers().find(p=>p.title.trim().toLowerCase()===title.trim().toLowerCase());
+  if(duplicate){
+    const addedBy=un(duplicate.addedby);
+    alert(`This paper is already added by ${addedBy} on ${duplicate.date}.\n\nTitle: "${duplicate.title}"\n\nPlease choose a different paper.`);
+    return;
+  }
   const id=uid();
   db.papers[id]={id,title,authors:g('p-au'),journal:g('p-jo'),domain:g('p-do'),finding:g('p-fi'),method:g('p-me'),relevance:g('p-re'),link:g('p-li'),notes:g('p-no'),addedby:cu.username,date:td(),paperNotes:[]};
   ['p-ti','p-au','p-jo','p-do','p-fi','p-me','p-li','p-no'].forEach(id2=>document.getElementById(id2).value='');
