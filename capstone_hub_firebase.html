@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capstone Hub — Project #37</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#07101C;--bg2:#0C1A28;--bg3:#112233;--bg4:#162B40;
+  --blue:#1D6FA4;--blue2:#2E9FDF;--teal:#00C9B1;
+  --green:#00D97E;--amber:#FFAB00;--red:#FF4A6E;--purple:#9B6DFF;
+  --text:#DCF0FF;--text2:#7BA3C0;--text3:#3D6880;
+  --border:rgba(46,159,223,.12);--border2:rgba(46,159,223,.25);
+  --glow:0 0 30px rgba(29,111,164,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(29,111,164,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(0,201,177,.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
+
+.screen{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;}
+.screen.hidden{display:none;}
+.auth-wrap{width:420px;max-width:100%;}
+.brand{text-align:center;margin-bottom:28px;}
+.brand-tag{display:inline-block;padding:3px 12px;border-radius:20px;border:1px solid var(--blue2);color:var(--blue2);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;}
+.brand-title{font-size:34px;font-weight:800;letter-spacing:-.03em;}
+.brand-title span{color:var(--blue2);}
+.brand-sub{color:var(--text2);font-size:13px;margin-top:4px;}
+.acard{background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:28px;box-shadow:var(--glow);}
+.astep{display:none;}.astep.on{display:block;}
+.step-bar{display:flex;gap:5px;margin-bottom:22px;justify-content:center;}
+.sdot{width:32px;height:3px;border-radius:2px;background:var(--bg4);transition:.3s;}.sdot.on{background:var(--blue2);}
+.fl{margin-bottom:14px;}
+.fl label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;}
+.fl input,.fl select{width:100%;padding:11px 13px;border-radius:9px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:.2s;}
+.fl input:focus,.fl select:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(46,159,223,.1);}
+.fl2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.otp-row{display:flex;gap:7px;justify-content:center;margin:12px 0;}
+.otp-box{width:46px;height:54px;text-align:center;font-size:22px;font-family:'JetBrains Mono',monospace;border-radius:9px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);outline:none;transition:.2s;}
+.otp-box:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(46,159,223,.1);}
+.abtn{width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;margin-top:2px;}
+.abtn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(46,159,223,.3);}
+.abtn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.aerr{background:rgba(255,74,110,.08);border:1px solid rgba(255,74,110,.2);color:var(--red);padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:10px;display:none;}
+.aok{background:rgba(0,217,126,.08);border:1px solid rgba(0,217,126,.2);color:var(--green);padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:10px;display:none;}
+.alink{text-align:center;margin-top:14px;font-size:13px;color:var(--text2);}
+.alink a{color:var(--blue2);cursor:pointer;font-weight:500;}
+.otp-note{background:rgba(46,159,223,.06);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.7;}
+.otp-note b{color:var(--blue2);}
+
+/* LOADING */
+#loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+#loading-overlay.hidden{display:none;}
+.spin{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--blue2);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--text2);}
+
+/* SYNC INDICATOR */
+#sync-dot{position:fixed;bottom:14px;right:14px;z-index:100;display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;color:var(--text3);}
+.sync-circle{width:7px;height:7px;border-radius:50%;background:var(--green);}
+.sync-circle.syncing{background:var(--amber);animation:pulse .8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+#app{display:none;min-height:100vh;}
+.shell{display:flex;min-height:100vh;}
+.sb{width:210px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+.sb-top{padding:18px 14px 14px;border-bottom:1px solid var(--border);}
+.sb-logo{font-size:10px;font-weight:700;letter-spacing:.2em;color:var(--teal);text-transform:uppercase;}
+.sb-title{font-size:15px;font-weight:800;margin-top:3px;line-height:1.2;}
+.sb-user{margin:10px 10px 6px;padding:9px 11px;border-radius:9px;background:rgba(46,159,223,.06);border:1px solid var(--border);}
+.sb-role{font-size:10px;color:var(--teal);font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+.sb-name{font-size:13px;font-weight:700;margin-top:2px;}
+.sb-email{font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;}
+.sb-nav{flex:1;padding:6px 0;}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 14px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;border-left:2px solid transparent;transition:.14s;position:relative;}
+.ni:hover{color:var(--text);background:rgba(46,159,223,.04);}
+.ni.on{color:var(--blue2);border-left-color:var(--blue2);background:rgba(46,159,223,.07);}
+.ni-ic{font-size:14px;width:17px;text-align:center;}
+.notif-pip{width:5px;height:5px;border-radius:50%;background:var(--red);position:absolute;right:12px;top:50%;transform:translateY(-50%);}
+.sb-out{padding:10px 10px 14px;}
+.out-btn{width:100%;padding:9px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:500;transition:.15s;}
+.out-btn:hover{background:rgba(255,74,110,.07);color:var(--red);border-color:rgba(255,74,110,.25);}
+
+.main{flex:1;overflow-x:hidden;}
+.topbar{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40;}
+.topbar-left{font-size:13px;color:var(--text2);}
+.topbar-left span{color:var(--teal);}
+.notif-area{position:relative;}
+.nb{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:8px;background:var(--bg2);border:1px solid var(--border2);font-size:13px;color:var(--text2);cursor:pointer;transition:.15s;}
+.nb:hover{border-color:var(--blue2);color:var(--text);}
+.nc{background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:50%;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;}
+.ndrop{position:absolute;right:0;top:calc(100% + 6px);width:300px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:10px;z-index:100;box-shadow:0 8px 28px rgba(0,0,0,.5);display:none;}
+.ndrop.open{display:block;}
+.ndi{padding:9px 10px;border-radius:7px;margin-bottom:5px;background:var(--bg3);border:1px solid var(--border);}
+.ndi.unread{border-color:rgba(46,159,223,.3);}
+.ndi-t{font-size:13px;font-weight:500;}
+.ndi-s{font-size:11px;color:var(--text3);margin-top:2px;}
+
+.page{display:none;padding:24px 28px;max-width:1080px;}
+.page.on{display:block;}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.pt{font-size:20px;font-weight:800;letter-spacing:-.02em;}
+.ps{color:var(--text2);font-size:13px;margin-top:2px;}
+
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:15px;position:relative;overflow:hidden;}
+.stat::after{content:'';position:absolute;top:-10px;right:-10px;width:50px;height:50px;border-radius:50%;filter:blur(18px);opacity:.25;}
+.sc::after{background:var(--blue2)}.sg::after{background:var(--green)}.sa::after{background:var(--amber)}.sp::after{background:var(--purple)}
+.sl{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;}
+.sv{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:500;margin:3px 0 1px;}
+.ss{font-size:11px;color:var(--text3);}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;}
+.ct{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
+.chart-c{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.chart-c canvas{max-height:200px;}
+
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:9px 13px;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px 13px;border-bottom:1px solid rgba(255,255,255,.025);font-size:13px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(46,159,223,.025);}
+
+.b{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.bM{background:rgba(0,217,126,.1);color:var(--green);}
+.bMo{background:rgba(255,171,0,.1);color:var(--amber);}
+.bm{background:rgba(255,74,110,.1);color:var(--red);}
+.bD{background:rgba(0,217,126,.1);color:var(--green);}
+.bI{background:rgba(255,171,0,.1);color:var(--amber);}
+.bP{background:rgba(61,104,128,.15);color:var(--text2);}
+.bH{background:rgba(255,74,110,.1);color:var(--red);}
+.bMe{background:rgba(255,171,0,.1);color:var(--amber);}
+.bL{background:rgba(61,104,128,.12);color:var(--text2);}
+.bB{background:rgba(46,159,223,.1);color:var(--blue2);}
+.bT{background:rgba(0,201,177,.1);color:var(--teal);}
+
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.fg label{font-size:12px;font-weight:500;color:var(--text2);}
+.fg input,.fg select,.fg textarea{padding:9px 11px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:.2s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue2);}
+.fg textarea{resize:vertical;min-height:65px;}
+.fg.full{grid-column:1/-1;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.btn{padding:8px 15px;border-radius:8px;border:none;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.14s;}
+.bp{background:var(--blue);color:#fff;}.bp:hover{background:var(--blue2);}
+.bs{background:rgba(0,217,126,.1);color:var(--green);border:1px solid rgba(0,217,126,.18);}.bs:hover{background:rgba(0,217,126,.18);}
+.bd{background:rgba(255,74,110,.08);color:var(--red);border:1px solid rgba(255,74,110,.18);}.bd:hover{background:rgba(255,74,110,.16);}
+.bo{background:transparent;border:1px solid var(--border2);color:var(--text2);}.bo:hover{border-color:var(--blue2);color:var(--blue2);}
+.bsm{padding:4px 9px;font-size:11px;}
+
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:200;}
+.mo.open{display:flex;}
+.mdl{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;width:500px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.5);}
+.mt{font-size:17px;font-weight:800;margin-bottom:18px;letter-spacing:-.02em;}
+.mf{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;}
+
+.notice{padding:10px 13px;border-radius:9px;font-size:13px;margin-bottom:14px;line-height:1.6;}
+.ni-info{background:rgba(46,159,223,.07);border:1px solid rgba(46,159,223,.18);color:#93C5FD;}
+.ni-warn{background:rgba(255,171,0,.07);border:1px solid rgba(255,171,0,.18);color:#FCD34D;}
+.ni-ok{background:rgba(0,217,126,.07);border:1px solid rgba(0,217,126,.18);color:#6EE7B7;}
+.av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;flex-shrink:0;}
+.prog{height:5px;border-radius:3px;background:var(--bg4);overflow:hidden;}
+.pf{height:100%;border-radius:3px;background:var(--blue2);transition:width .5s;}
+.tl{display:flex;flex-direction:column;gap:9px;}
+.tl-i{display:flex;gap:9px;align-items:flex-start;}
+.tl-d{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div class="spin"></div>
+  <div class="loading-txt" id="loading-txt">Connecting to database...</div>
+</div>
+
+<!-- SYNC INDICATOR -->
+<div id="sync-dot" style="display:none">
+  <div class="sync-circle" id="sync-circle"></div>
+  <span id="sync-txt">Live</span>
+</div>
+
+<!-- REGISTER -->
+<div class="screen hidden" id="sc-reg">
+<div class="auth-wrap">
+  <div class="brand">
+    <div class="brand-tag">Join Team</div>
+    <div class="brand-title">Create <span>Account</span></div>
+    <div class="brand-sub">Project #37 — AI Lab Companion</div>
+  </div>
+  <div class="acard">
+    <div class="step-bar">
+      <div class="sdot on" id="d1"></div><div class="sdot" id="d2"></div><div class="sdot" id="d3"></div>
+    </div>
+    <div class="astep on" id="s1">
+      <div class="aerr" id="e1"></div>
+      <div class="fl2">
+        <div class="fl"><label>First name</label><input id="r-fn" placeholder="Ahmed"></div>
+        <div class="fl"><label>Last name</label><input id="r-ln" placeholder="Al Mansoori"></div>
+      </div>
+      <div class="fl"><label>Email address</label><input id="r-em" type="email" placeholder="ahmed@students.ac.ae"></div>
+      <div class="fl"><label>Username <span style="color:var(--text3);font-weight:400">(no spaces)</span></label><input id="r-un" placeholder="ahmed_m" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"></div>
+      <div class="fl"><label>Role</label>
+        <select id="r-role" onfocus="updateRoleOpts()">
+          <option value="member">Team Member</option>
+          <option value="leader">Team Leader</option>
+          <option value="supervisor">Supervisor</option>
+        </select>
+      </div>
+      <div id="role-hint" style="font-size:11px;color:var(--text3);margin-top:-8px;margin-bottom:10px"></div>
+      <div class="fl2">
+        <div class="fl"><label>Password</label><input type="password" id="r-pw" placeholder="Min 6 chars"></div>
+        <div class="fl"><label>Confirm</label><input type="password" id="r-pw2" placeholder="Repeat"></div>
+      </div>
+      <button class="abtn" onclick="step1()">Continue →</button>
+      <div class="alink"><a onclick="show('sc-login')">Already registered? Sign in</a></div>
+    </div>
+    <div class="astep" id="s2">
+      <div class="aerr" id="e2"></div>
+      <div class="aok" id="ok2"></div>
+      <div class="otp-note">
+        ✅ Your verification code is:<br>
+        <div id="otp-display" style="font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;color:var(--blue2);letter-spacing:.35em;text-align:center;padding:10px 0;background:var(--bg3);border-radius:8px;margin:6px 0 4px;border:1px solid var(--border2)"></div>
+        <span style="font-size:11px;color:var(--text3)">Registering as: <span id="em-show" style="color:var(--blue2)"></span></span>
+      </div>
+      <div style="text-align:center;margin-bottom:4px;font-size:13px;color:var(--text2)">Enter the 6-digit code</div>
+      <div class="otp-row">
+        <input class="otp-box" maxlength="1" oninput="on(this,0)" onkeydown="ob(event,this,0)">
+        <input class="otp-box" maxlength="1" oninput="on(this,1)" onkeydown="ob(event,this,1)">
+        <input class="otp-box" maxlength="1" oninput="on(this,2)" onkeydown="ob(event,this,2)">
+        <input class="otp-box" maxlength="1" oninput="on(this,3)" onkeydown="ob(event,this,3)">
+        <input class="otp-box" maxlength="1" oninput="on(this,4)" onkeydown="ob(event,this,4)">
+        <input class="otp-box" maxlength="1" oninput="on(this,5)" onkeydown="ob(event,this,5)">
+      </div>
+      <button class="abtn" onclick="verifyOTP()">Verify & Create Account →</button>
+      <div class="alink"><a onclick="show('sc-login')">Back to login</a></div>
+    </div>
+    <div class="astep" id="s3">
+      <div style="text-align:center;padding:16px 0">
+        <div style="font-size:44px;margin-bottom:10px">✅</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px">Account created!</div>
+        <div style="color:var(--text2);font-size:13px;margin-bottom:22px">You can now sign in.</div>
+        <button class="abtn" onclick="show('sc-login')">Go to Sign In →</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen hidden" id="sc-login">
+<div class="auth-wrap">
+  <div class="brand">
+    <div class="brand-tag">Welcome back</div>
+    <div class="brand-title">Sign <span>In</span></div>
+    <div class="brand-sub">Project #37 — AI Lab Companion</div>
+  </div>
+  <div class="acard">
+    <div class="aerr" id="le"></div>
+    <div class="fl"><label>Username</label><input id="l-un" placeholder="your_username" oninput="this.value=this.value.toLowerCase()" onkeydown="if(event.key==='Enter')login()"></div>
+    <div class="fl"><label>Password</label><input type="password" id="l-pw" placeholder="Your password" onkeydown="if(event.key==='Enter')login()"></div>
+    <button class="abtn" id="login-btn" onclick="login()">Sign In →</button>
+    <div class="alink"><a onclick="show('sc-reg')">No account? Register</a></div>
+  </div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="shell">
+<nav class="sb">
+  <div class="sb-top">
+    <div class="sb-logo">Capstone Hub</div>
+    <div class="sb-title">AI Lab<br>Companion</div>
+  </div>
+  <div class="sb-user">
+    <div class="sb-role" id="s-role">Member</div>
+    <div class="sb-name" id="s-name">—</div>
+    <div class="sb-email" id="s-email">—</div>
+  </div>
+  <div class="sb-nav">
+    <div class="ni on" onclick="go('dashboard',this)"><span class="ni-ic">◈</span>Dashboard</div>
+    <div class="ni" onclick="go('members',this)"><span class="ni-ic">◉</span>Members</div>
+    <div class="ni" onclick="go('meetings',this)"><span class="ni-ic">◷</span>Meetings</div>
+    <div class="ni" onclick="go('tasks',this)"><span class="ni-ic">◻</span>Tasks<span class="notif-pip" id="pip-tasks" style="display:none"></span></div>
+    <div class="ni" onclick="go('papers',this)"><span class="ni-ic">◈</span>Papers</div>
+    <div class="ni" onclick="go('analytics',this)"><span class="ni-ic">◌</span>Analytics</div>
+    <div class="ni" onclick="go('notes',this)"><span class="ni-ic">◇</span>Notes<span class="notif-pip" id="pip-notes" style="display:none"></span></div>
+    <div class="ni" id="ni-settings" onclick="go('settings',this)"><span class="ni-ic">⚙</span>Settings</div>
+  </div>
+  <div class="sb-out"><button class="out-btn" onclick="logout()">← Sign Out</button></div>
+</nav>
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">Project <span>#37</span> — <span>AI Lab Companion</span></div>
+    <div class="notif-area">
+      <div class="nb" onclick="toggleND()">🔔 <span id="nc-txt">Notifications</span><span class="nc" id="nc" style="display:none">0</span></div>
+      <div class="ndrop" id="ndrop">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;padding:0 3px">NOTIFICATIONS</div>
+        <div id="nl"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="pg-dashboard" class="page on">
+    <div class="ph"><div><div class="pt">Dashboard</div><div class="ps">Live team overview — synced in real time</div></div></div>
+    <div class="g4" id="d-stats"></div>
+    <div class="g2">
+      <div class="chart-c"><div class="ct">Tasks by phase</div><canvas id="c-phase"></canvas></div>
+      <div class="chart-c"><div class="ct">Papers collected (target 100)</div><canvas id="c-papers"></canvas></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="ct">Member overview</div><div id="d-mem"></div></div>
+      <div class="card"><div class="ct">Recent activity</div><div class="tl" id="d-act"></div></div>
+    </div>
+  </div>
+
+  <!-- MEMBERS -->
+  <div id="pg-members" class="page">
+    <div class="ph"><div><div class="pt">Members</div><div class="ps">Registered accounts</div></div></div>
+    <div class="card"><div class="tw"><table id="t-mem"></table></div></div>
+  </div>
+
+  <!-- MEETINGS -->
+  <div id="pg-meetings" class="page">
+    <div class="ph"><div><div class="pt">Meetings</div><div class="ps">Attendance & minutes</div></div><div id="mtg-btn"></div></div>
+    <div class="card"><div class="tw"><table id="t-mtg"></table></div></div>
+  </div>
+
+  <!-- TASKS -->
+  <div id="pg-tasks" class="page">
+    <div class="ph"><div><div class="pt">Tasks</div><div class="ps">Assignments & completion</div></div><div id="tsk-btn"></div></div>
+    <div class="card"><div class="tw"><table id="t-tsk"></table></div></div>
+  </div>
+
+  <!-- PAPERS -->
+  <div id="pg-papers" class="page">
+    <div class="ph"><div><div class="pt">Papers</div><div class="ps">Click any row to see full details</div></div></div>
+    <div class="card">
+      <div class="ct">Add paper</div>
+      <div class="fgrid">
+        <div class="fg"><label>Title</label><input id="p-ti" placeholder="Paper title"></div>
+        <div class="fg"><label>Authors & Year</label><input id="p-au" placeholder="Smith et al. (2023)"></div>
+        <div class="fg"><label>Journal</label><input id="p-jo" placeholder="IEEE IoT Journal"></div>
+        <div class="fg"><label>Domain</label><input id="p-do" placeholder="Computer Vision / IoT"></div>
+        <div class="fg"><label>Key finding</label><input id="p-fi" placeholder="Main result"></div>
+        <div class="fg"><label>Method</label><input id="p-me" placeholder="CNN, YOLO, Transformer..."></div>
+        <div class="fg"><label>Relevance</label><select id="p-re"><option>High</option><option>Medium</option><option>Low</option></select></div>
+        <div class="fg"><label>DOI link</label><input id="p-li" placeholder="https://doi.org/..."></div>
+        <div class="fg full"><label>Your notes</label><textarea id="p-no" placeholder="How this paper helps your project..."></textarea></div>
+      </div>
+      <button class="btn bp" onclick="addPaper()">+ Add Paper</button>
+    </div>
+    <div class="card">
+      <div class="ct">All papers — <span id="pc">0</span> / 100</div>
+      <div class="prog" style="margin-bottom:12px"><div class="pf" id="pp" style="width:0%"></div></div>
+      <div class="tw"><table id="t-pap"></table></div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="pg-analytics" class="page">
+    <div class="ph"><div><div class="pt">Analytics</div><div class="ps">Visual progress charts</div></div></div>
+    <div class="g2" style="margin-bottom:14px">
+      <div class="chart-c"><div class="ct">Task status</div><canvas id="c-status"></canvas></div>
+      <div class="chart-c"><div class="ct">Attendance per member</div><canvas id="c-att"></canvas></div>
+    </div>
+    <div class="g2" style="margin-bottom:14px">
+      <div class="chart-c"><div class="ct">Papers per member</div><canvas id="c-pap-mem"></canvas></div>
+      <div class="chart-c"><div class="ct">Tasks: assigned vs done</div><canvas id="c-tsk-mem"></canvas></div>
+    </div>
+    <div class="chart-c"><div class="ct">Weekly task completion</div><canvas id="c-week" style="max-height:140px"></canvas></div>
+  </div>
+
+  <!-- NOTES -->
+  <div id="pg-notes" class="page">
+    <div class="ph"><div><div class="pt">Notes & Feedback</div><div class="ps">Leader & supervisor messages</div></div></div>
+    <div id="note-form"></div>
+    <div id="note-list"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="pg-settings" class="page">
+    <div class="ph"><div><div class="pt">Email Settings</div><div class="ps">Connect EmailJS for real email notifications</div></div></div>
+    <div class="card" style="max-width:560px;margin-bottom:16px">
+      <div class="ct">How to get free EmailJS keys</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--text2);line-height:1.8">
+        <div style="padding:12px 14px;background:var(--bg3);border-radius:9px;border-left:3px solid var(--blue2)"><b style="color:var(--text)">Step 1</b> — Go to <a href="https://emailjs.com" target="_blank" style="color:var(--blue2)">emailjs.com</a> → Sign up free</div>
+        <div style="padding:12px 14px;background:var(--bg3);border-radius:9px;border-left:3px solid var(--teal)"><b style="color:var(--text)">Step 2</b> — Email Services → Add New Service → Gmail → Copy <b style="color:var(--teal)">Service ID</b></div>
+        <div style="padding:12px 14px;background:var(--bg3);border-radius:9px;border-left:3px solid var(--green)"><b style="color:var(--text)">Step 3</b> — Email Templates → Create template → Body: <code style="color:var(--green)">Hi {{to_name}}, {{message}}</code> → Copy <b style="color:var(--green)">Template ID</b></div>
+        <div style="padding:12px 14px;background:var(--bg3);border-radius:9px;border-left:3px solid var(--amber)"><b style="color:var(--text)">Step 4</b> — Account → API Keys → Copy <b style="color:var(--amber)">Public Key</b></div>
+      </div>
+    </div>
+    <div class="card" style="max-width:560px">
+      <div class="ct">EmailJS keys</div>
+      <div id="ejs-status" class="notice ni-info" style="display:none"></div>
+      <div class="fg"><label>Public Key</label><input id="ejs-pk" placeholder="xYz1234AbCdEfGhIj"></div>
+      <div class="fg"><label>Service ID</label><input id="ejs-sv" placeholder="service_abc12345"></div>
+      <div class="fg"><label>Template ID</label><input id="ejs-tm" placeholder="template_xyz78901"></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn bp" onclick="saveEJS()">Save & Activate →</button>
+        <button class="btn bo" onclick="testEJS()">Send test to myself</button>
+      </div>
+      <div style="margin-top:12px;padding:10px 12px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text3)">
+        Status: <span id="ejs-current">⚪ Not configured</span>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="mo-mtg">
+<div class="mdl">
+  <div class="mt">Add Meeting Record</div>
+  <div class="fgrid">
+    <div class="fg"><label>Date</label><input type="date" id="m-dt"></div>
+    <div class="fg"><label>Type</label><select id="m-ty"><option>Supervisor meeting</option><option>Team meeting</option><option>Both</option></select></div>
+    <div class="fg full"><label>Minutes / Agenda</label><textarea id="m-ag" placeholder="What was discussed..."></textarea></div>
+  </div>
+  <div style="margin-top:10px"><div class="ct">Attendance</div><div id="att"></div></div>
+  <div class="mf">
+    <button class="btn bd" onclick="cm('mo-mtg')">Cancel</button>
+    <button class="btn bp" onclick="saveMtg()">Save Meeting</button>
+  </div>
+</div>
+</div>
+
+<div class="mo" id="mo-tsk">
+<div class="mdl">
+  <div class="mt">Assign Task</div>
+  <div class="fgrid">
+    <div class="fg full"><label>Task description</label><input id="t-ds" placeholder="What needs to be done"></div>
+    <div class="fg"><label>Assign to</label><select id="t-wh"></select></div>
+    <div class="fg"><label>Phase</label>
+      <select id="t-ph"><option>Phase 0 — Setup</option><option>Phase 1 — Hardware</option><option>Phase 2 — Vision</option><option>Phase 3 — LLM Engine</option><option>Phase 4 — Orchestrator</option><option>Phase 5 — Dashboard</option><option>Phase 6 — PCB</option><option>Phase 7 — Validation</option><option>Documentation</option></select>
+    </div>
+    <div class="fg"><label>Priority</label><select id="t-pr"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+    <div class="fg"><label>Deadline</label><input type="date" id="t-dl"></div>
+  </div>
+  <div class="mf">
+    <button class="btn bd" onclick="cm('mo-tsk')">Cancel</button>
+    <button class="btn bp" onclick="saveTask()">Assign Task</button>
+  </div>
+</div>
+</div>
+
+<div class="mo" id="mo-paper">
+<div class="mdl" style="width:620px;max-width:96vw">
+  <div id="pmod-body"></div>
+</div>
+</div>
+
+<script>
+// ══ FIREBASE CONFIG ════════════════════════════════════════════════════════
+const FBURL = 'https://capstone1-ailab-default-rtdb.firebaseio.com';
+
+async function fbGet(path=''){
+  try{
+    const r=await fetch(`${FBURL}/${path}.json`);
+    if(!r.ok) return null;
+    return r.json();
+  }catch(e){return null;}
+}
+async function fbSet(path,data){
+  setSyncing(true);
+  try{
+    await fetch(`${FBURL}/${path}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  }finally{setSyncing(false);}
+}
+async function fbPatch(path,data){
+  setSyncing(true);
+  try{
+    await fetch(`${FBURL}/${path}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  }finally{setSyncing(false);}
+}
+async function fbDel(path){
+  setSyncing(true);
+  try{
+    await fetch(`${FBURL}/${path}.json`,{method:'DELETE'});
+  }finally{setSyncing(false);}
+}
+
+// ══ STATE ════════════════════════════════════════════════════════════════
+let db={users:{},meetings:{},tasks:{},papers:{},notes:{},notifs:{}};
+let cu=null;
+let otp='';
+let reg={};
+let CHS={};
+let pollTimer=null;
+let lastData='';
+const PAL=['#2E9FDF','#00D97E','#FFAB00','#FF4A6E','#9B6DFF','#00C9B1','#FF7143','#E879A0'];
+
+function uid(){return 'id'+Date.now()+Math.random().toString(36).slice(2,6);}
+function td(){return new Date().toISOString().slice(0,10);}
+function g(id){return document.getElementById(id)?.value?.trim()||'';}
+function ini(name){return(name||'?').split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);}
+function rl(r){return r==='leader'?'Team Leader':r==='supervisor'?'Supervisor':'Member';}
+function canEdit(){return cu&&(cu.role==='leader'||cu.role==='supervisor');}
+function er(c){return`<tr><td colspan="${c}" style="text-align:center;padding:24px;color:var(--text3)">Nothing here yet.</td></tr>`;}
+function err(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
+function om(id){document.getElementById(id).classList.add('open');}
+function cm(id){document.getElementById(id).classList.remove('open');}
+
+function users(){return Object.values(db.users||{});}
+function meetings(){return Object.values(db.meetings||{}).sort((a,b)=>a.date<b.date?1:-1);}
+function tasks(){return Object.values(db.tasks||{});}
+function papers(){return Object.values(db.papers||{}).sort((a,b)=>a.date<b.date?1:-1);}
+function notes(){return Object.values(db.notes||{}).sort((a,b)=>a.date<b.date?1:-1);}
+function myNotifs(){return Object.values((db.notifs||{})[cu?.username]||{}).sort((a,b)=>a.date<b.date?1:-1);}
+
+function uc(username){
+  const all=users();
+  const i=all.findIndex(u=>u.username===username);
+  return PAL[Math.max(0,i)%PAL.length];
+}
+function un(username){
+  if(username==='all') return 'All members';
+  const u=db.users?.[username];
+  return u?u.fullName:username;
+}
+
+// ══ SYNC UI ══════════════════════════════════════════════════════════════
+function setSyncing(s){
+  const c=document.getElementById('sync-circle');
+  const t=document.getElementById('sync-txt');
+  if(!c) return;
+  c.classList.toggle('syncing',s);
+  t.textContent=s?'Saving...':'Live';
+}
+
+// ══ STARTUP ══════════════════════════════════════════════════════════════
+window.onload=async()=>{
+  setLoading('Connecting to database...');
+  const data=await fbGet('');
+  if(data){
+    db.users=data.users||{};
+    db.meetings=data.meetings||{};
+    db.tasks=data.tasks||{};
+    db.papers=data.papers||{};
+    db.notes=data.notes||{};
+    db.notifs=data.notifs||{};
+    lastData=JSON.stringify(data);
+  }
+  hideLoading();
+  // show register if no users, else login
+  show(Object.keys(db.users).length===0?'sc-reg':'sc-login');
+};
+
+function setLoading(txt){
+  document.getElementById('loading-txt').textContent=txt;
+  document.getElementById('loading-overlay').classList.remove('hidden');
+}
+function hideLoading(){document.getElementById('loading-overlay').classList.add('hidden');}
+
+// ══ POLLING ══════════════════════════════════════════════════════════════
+function startPolling(){
+  document.getElementById('sync-dot').style.display='flex';
+  pollTimer=setInterval(async()=>{
+    const data=await fbGet('');
+    if(!data) return;
+    const h=JSON.stringify(data);
+    if(h!==lastData){
+      lastData=h;
+      db.users=data.users||{};
+      db.meetings=data.meetings||{};
+      db.tasks=data.tasks||{};
+      db.papers=data.papers||{};
+      db.notes=data.notes||{};
+      db.notifs=data.notifs||{};
+      renderAll();
+    }
+  },5000);
+}
+function stopPolling(){
+  clearInterval(pollTimer);
+  document.getElementById('sync-dot').style.display='none';
+}
+
+// ══ SCREENS ══════════════════════════════════════════════════════════════
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
+
+// ══ REGISTER ══════════════════════════════════════════════════════════════
+function updateRoleOpts(){
+  const sel=document.getElementById('r-role');
+  const hint=document.getElementById('role-hint');
+  const hasLeader=users().some(u=>u.role==='leader');
+  const hasSup=users().some(u=>u.role==='supervisor');
+  Array.from(sel.options).forEach(o=>{
+    if(o.value==='leader'){o.disabled=hasLeader;o.textContent='Team Leader'+(hasLeader?' (taken)':'');}
+    if(o.value==='supervisor'){o.disabled=hasSup;o.textContent='Supervisor'+(hasSup?' (taken)':'');}
+  });
+  hint.textContent='';
+  if(hasLeader&&hasSup) hint.textContent='Leader and supervisor are already registered.';
+  else if(hasLeader) hint.textContent='A team leader is already registered.';
+  else if(hasSup) hint.textContent='A supervisor is already registered.';
+}
+
+async function step1(){
+  const fn=g('r-fn'),ln=g('r-ln'),em=g('r-em'),un2=g('r-un'),ro=g('r-role'),pw=g('r-pw'),pw2=g('r-pw2');
+  if(!fn||!ln||!em||!un2||!pw){err('e1','Fill all fields.');return;}
+  if(!/\S+@\S+\.\S+/.test(em)){err('e1','Enter a valid email.');return;}
+  if(pw.length<6){err('e1','Password must be 6+ characters.');return;}
+  if(pw!==pw2){err('e1','Passwords do not match.');return;}
+  if(db.users[un2]){err('e1','Username taken.');return;}
+  if(users().find(u=>u.email===em)){err('e1','Email already registered.');return;}
+  if(ro==='leader'&&users().some(u=>u.role==='leader')){err('e1','A leader is already registered.');return;}
+  if(ro==='supervisor'&&users().some(u=>u.role==='supervisor')){err('e1','A supervisor is already registered.');return;}
+  reg={firstName:fn,lastName:ln,fullName:fn+' '+ln,email:em,username:un2,role:ro,password:btoa(pw)};
+  otp=String(Math.floor(100000+Math.random()*900000));
+  document.getElementById('em-show').textContent=em;
+  document.getElementById('otp-display').textContent=otp;
+  goStep(2);
+}
+
+async function verifyOTP(){
+  const entered=Array.from(document.querySelectorAll('.otp-box')).map(i=>i.value).join('');
+  if(entered.length<6){err('e2','Enter all 6 digits.');return;}
+  if(entered!==otp){err('e2','Incorrect code. Try again.');return;}
+  setLoading('Creating account...');
+  db.users[reg.username]={...reg,id:uid(),createdAt:td()};
+  await fbSet('users',db.users);
+  hideLoading();
+  goStep(3);
+}
+
+function goStep(n){
+  document.querySelectorAll('.astep').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s'+n).classList.add('on');
+  for(let i=1;i<=3;i++) document.getElementById('d'+i).classList.toggle('on',i<=n);
+}
+function on(el,i){el.value=el.value.replace(/\D/,'');if(el.value){const all=document.querySelectorAll('.otp-box');if(i<5)all[i+1].focus();}}
+function ob(e,el,i){if(e.key==='Backspace'&&!el.value&&i>0)document.querySelectorAll('.otp-box')[i-1].focus();}
+
+// ══ LOGIN ══════════════════════════════════════════════════════════════
+async function login(){
+  const un2=g('l-un'),pw=g('l-pw');
+  if(!un2||!pw){err('le','Enter username and password.');return;}
+  const btn=document.getElementById('login-btn');
+  btn.disabled=true; btn.textContent='Signing in...';
+  // reload fresh data
+  const data=await fbGet('');
+  if(data){
+    db.users=data.users||{};
+    db.meetings=data.meetings||{};
+    db.tasks=data.tasks||{};
+    db.papers=data.papers||{};
+    db.notes=data.notes||{};
+    db.notifs=data.notifs||{};
+  }
+  btn.disabled=false; btn.textContent='Sign In →';
+  const u=db.users[un2];
+  if(!u||u.password!==btoa(pw)){err('le','Incorrect username or password.');return;}
+  cu=u;
+  document.getElementById('sc-login').classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  document.getElementById('s-role').textContent=rl(cu.role);
+  document.getElementById('s-name').textContent=cu.fullName;
+  document.getElementById('s-email').textContent=cu.email;
+  document.getElementById('ni-settings').style.display=canEdit()?'flex':'none';
+  initEJS();
+  startPolling();
+  renderAll();
+}
+
+function logout(){
+  stopPolling();
+  cu=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('l-pw').value='';
+  document.getElementById('le').style.display='none';
+  show('sc-login');
+}
+
+// ══ NAV ══════════════════════════════════════════════════════════════
+function go(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('pg-'+page).classList.add('on');
+  el.classList.add('on');
+  rp(page);
+  if(page==='tasks') document.getElementById('pip-tasks').style.display='none';
+  if(page==='notes') document.getElementById('pip-notes').style.display='none';
+}
+
+function renderAll(){['dashboard','members','meetings','tasks','papers','notes'].forEach(rp);renderNotifs();}
+function rp(p){
+  if(p==='dashboard') rDash();
+  if(p==='members') rMem();
+  if(p==='meetings') rMtg();
+  if(p==='tasks') rTsk();
+  if(p==='papers') rPap();
+  if(p==='analytics') rAna();
+  if(p==='notes') rNotes();
+  if(p==='settings') loadEJSSettings();
+}
+
+// ══ CHARTS ══════════════════════════════════════════════════════════════
+const cOpts={responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#7BA3C0',font:{family:'Outfit',size:11}}}},scales:{x:{ticks:{color:'#3D6880',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(46,159,223,0.05)'}},y:{ticks:{color:'#3D6880',font:{size:10}},grid:{color:'rgba(46,159,223,0.05)'}}}};
+function mkC(id,type,data,opts={}){
+  if(CHS[id]) CHS[id].destroy();
+  const ctx=document.getElementById(id)?.getContext('2d');
+  if(!ctx) return;
+  CHS[id]=new Chart(ctx,{type,data,options:{...cOpts,...opts,responsive:true,maintainAspectRatio:true}});
+}
+
+// ══ DASHBOARD ══════════════════════════════════════════════════════════
+function rDash(){
+  const T=tasks();
+  const done=T.filter(t=>t.status==='Done').length;
+  document.getElementById('d-stats').innerHTML=`
+    <div class="stat sc"><div class="sl">Tasks</div><div class="sv" style="color:var(--blue2)">${T.length}</div><div class="ss">${done} done</div></div>
+    <div class="stat sg"><div class="sl">Meetings</div><div class="sv" style="color:var(--green)">${meetings().length}</div><div class="ss">Recorded</div></div>
+    <div class="stat sa"><div class="sl">Papers</div><div class="sv" style="color:var(--amber)">${papers().length}</div><div class="ss">/ 100 target</div></div>
+    <div class="stat sp"><div class="sl">Members</div><div class="sv" style="color:var(--purple)">${users().length}</div><div class="ss">Registered</div></div>`;
+
+  const phases={};
+  T.forEach(t=>{if(!phases[t.phase])phases[t.phase]={tot:0,done:0};phases[t.phase].tot++;if(t.status==='Done')phases[t.phase].done++;});
+  mkC('c-phase','bar',{
+    labels:Object.keys(phases).map(p=>p.split('—')[0].trim()),
+    datasets:[{label:'Done',data:Object.values(phases).map(p=>p.done),backgroundColor:'rgba(0,217,126,.55)',borderRadius:4},{label:'Left',data:Object.values(phases).map(p=>p.tot-p.done),backgroundColor:'rgba(46,159,223,.25)',borderRadius:4}]
+  },{scales:{x:{stacked:true,ticks:{color:'#3D6880',font:{size:10,family:'JetBrains Mono'}},grid:{color:'rgba(46,159,223,0.05)'}},y:{stacked:true,ticks:{color:'#3D6880'},grid:{color:'rgba(46,159,223,0.05)'}}},plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11}}}}});
+
+  const pn=Math.min(100,papers().length);
+  mkC('c-papers','doughnut',{labels:['Collected','Remaining'],datasets:[{data:[pn,Math.max(0,100-pn)],backgroundColor:['rgba(0,217,126,.65)','rgba(46,159,223,.1)'],borderWidth:0}]},{cutout:'70%',plugins:{legend:{display:false}},scales:{}});
+
+  const mems=users().filter(u=>u.role!=='supervisor');
+  document.getElementById('d-mem').innerHTML=mems.map(u=>{
+    const mt=T.filter(t=>t.assignee===u.username||t.assignee==='all');
+    const md=mt.filter(t=>t.status==='Done').length;
+    const mp=papers().filter(p=>p.addedby===u.username).length;
+    const pct=mt.length?Math.round(md/mt.length*100):0;
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px">
+        <div class="av" style="width:28px;height:28px;font-size:10px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div>
+        <div style="flex:1"><div style="font-weight:600;font-size:13px">${u.fullName}</div><div style="font-size:11px;color:var(--text3)">${md}/${mt.length} tasks · ${mp} papers</div></div>
+      </div>
+      <div class="prog"><div class="pf" style="width:${pct}%;background:${pct===100?'var(--green)':'var(--blue2)'}"></div></div>
+    </div>`;
+  }).join('');
+
+  const acts=[];
+  meetings().slice(0,2).forEach(m=>acts.push({t:'Meeting: '+m.date,s:m.type,c:'var(--teal)'}));
+  T.filter(t=>t.status==='Done').slice(-2).forEach(t=>acts.push({t:'Done: '+t.desc.slice(0,38),s:un(t.assignee),c:'var(--green)'}));
+  papers().slice(-2).forEach(p=>acts.push({t:'Paper: '+p.title.slice(0,36),s:un(p.addedby),c:'var(--purple)'}));
+  document.getElementById('d-act').innerHTML=acts.length
+    ?acts.map(a=>`<div class="tl-i"><div class="tl-d" style="background:${a.c}"></div><div><div style="font-size:13px;font-weight:500">${a.t}</div><div style="font-size:11px;color:var(--text3)">${a.s}</div></div></div>`).join('')
+    :'<div style="color:var(--text3);font-size:13px">No activity yet.</div>';
+}
+
+// ══ MEMBERS ══════════════════════════════════════════════════════════════
+function rMem(){
+  const rows=users().map(u=>{
+    const mt=tasks().filter(t=>t.assignee===u.username||t.assignee==='all');
+    const md=mt.filter(t=>t.status==='Done').length;
+    const att=meetings().filter(m=>m.attendance&&m.attendance[u.username]).length;
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:9px"><div class="av" style="width:30px;height:30px;font-size:11px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div><div><div style="font-weight:600">${u.fullName}</div><div style="font-size:11px;color:var(--text3)">@${u.username}</div></div></div></td>
+      <td style="font-size:12px;color:var(--text2)">${u.email}</td>
+      <td><span class="b bT">${rl(u.role)}</span></td>
+      <td>${md}/${mt.length}</td>
+      <td>${att}/${meetings().length}</td>
+      <td style="font-size:11px;color:var(--text3)">${u.createdAt}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('t-mem').innerHTML=`<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tasks</th><th>Meetings</th><th>Joined</th></tr></thead><tbody>${rows||er(6)}</tbody>`;
+}
+
+// ══ MEETINGS ══════════════════════════════════════════════════════════════
+function rMtg(){
+  document.getElementById('mtg-btn').innerHTML=canEdit()?`<button class="btn bp" onclick="openMtg()">+ Add Meeting</button>`:'';
+  document.getElementById('att').innerHTML=users().map(u=>`<label style="display:flex;align-items:center;gap:7px;margin-bottom:7px;cursor:pointer"><input type="checkbox" id="ac-${u.username}" checked style="width:15px;height:15px;accent-color:var(--blue2)"><span>${u.fullName}</span></label>`).join('');
+  const rows=meetings().map(m=>{
+    const badges=users().map(u=>`<span class="b ${m.attendance?.[u.username]?'bD':'bm'}" style="margin-right:3px">${u.fullName.split(' ')[0]} ${m.attendance?.[u.username]?'✓':'✗'}</span>`).join('');
+    const del=canEdit()?`<button class="btn bsm bd" onclick="delMtg('${m.id}')">Del</button>`:'';
+    return `<tr><td><span class="b bB">${m.date}</span></td><td style="font-size:12px">${m.type}</td><td style="font-size:12px;color:var(--text2);max-width:200px">${m.agenda||'—'}</td><td>${badges}</td><td>${del}</td></tr>`;
+  }).join('');
+  document.getElementById('t-mtg').innerHTML=`<thead><tr><th>Date</th><th>Type</th><th>Minutes</th><th>Attendance</th><th></th></tr></thead><tbody>${rows||er(5)}</tbody>`;
+}
+function openMtg(){document.getElementById('m-dt').value='';document.getElementById('m-ag').value='';om('mo-mtg');}
+async function saveMtg(){
+  const date=g('m-dt'),type=g('m-ty'),agenda=g('m-ag');
+  if(!date){alert('Select date.');return;}
+  const attendance={};
+  users().forEach(u=>{attendance[u.username]=document.getElementById('ac-'+u.username)?.checked||false;});
+  const id=uid();
+  db.meetings[id]={id,date,type,agenda,attendance};
+  await fbSet('meetings',db.meetings);
+  cm('mo-mtg'); renderAll();
+  pushNotif('Meeting recorded: '+date,'Meeting on '+date+' has been recorded.',null,'meeting');
+}
+async function delMtg(id){if(!confirm('Delete?'))return;delete db.meetings[id];await fbSet('meetings',db.meetings);renderAll();}
+
+// ══ TASKS ══════════════════════════════════════════════════════════════
+function rTsk(){
+  document.getElementById('tsk-btn').innerHTML=canEdit()?`<button class="btn bp" onclick="openTsk()">+ Assign Task</button>`:'';
+  document.getElementById('t-wh').innerHTML=`<option value="all">All members</option>`+users().map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('');
+  const myT=canEdit()?tasks():tasks().filter(t=>t.assignee===cu.username||t.assignee==='all');
+  const rows=myT.map(t=>{
+    const sb=t.status==='Done'?'bD':t.status==='In Progress'?'bI':'bP';
+    const pb=t.priority==='High'?'bH':t.priority==='Medium'?'bMe':'bL';
+    const act=canEdit()?
+      `<select onchange="setTskSt('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:12px;font-family:'Outfit',sans-serif"><option ${t.status==='Pending'?'selected':''}>Pending</option><option ${t.status==='In Progress'?'selected':''}>In Progress</option><option ${t.status==='Done'?'selected':''}>Done</option></select><button class="btn bsm bd" onclick="delTsk('${t.id}')">✕</button>`:
+      (t.assignee===cu.username||t.assignee==='all')?`<button class="btn bsm bs" onclick="setTskSt('${t.id}','Done')">Mark done</button>`:'';
+    return `<tr><td style="font-weight:500;max-width:180px">${t.desc}</td><td><div style="display:flex;align-items:center;gap:6px"><div class="av" style="width:20px;height:20px;font-size:9px;background:${uc(t.assignee)}22;color:${uc(t.assignee)}">${t.assignee==='all'?'AL':ini(un(t.assignee))}</div><span style="font-size:12px">${un(t.assignee)}</span></div></td><td style="font-size:11px;color:var(--text2)">${t.phase.split('—')[0]}</td><td><span class="b ${pb}">${t.priority}</span></td><td style="font-size:12px;color:var(--text2)">${t.deadline||'—'}</td><td><span class="b ${sb}">${t.status}</span></td><td style="display:flex;gap:5px;align-items:center">${act}</td></tr>`;
+  }).join('');
+  document.getElementById('t-tsk').innerHTML=`<thead><tr><th>Task</th><th>Assigned to</th><th>Phase</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows||er(7)}</tbody>`;
+}
+function openTsk(){document.getElementById('t-ds').value='';om('mo-tsk');}
+async function saveTask(){
+  const desc=g('t-ds');if(!desc){alert('Enter description.');return;}
+  const assignee=g('t-wh'),phase=g('t-ph'),priority=g('t-pr'),deadline=g('t-dl');
+  const id=uid();
+  db.tasks[id]={id,desc,assignee,phase,priority,deadline,status:'Pending',createdAt:td(),by:cu.username};
+  await fbSet('tasks',db.tasks);
+  cm('mo-tsk'); renderAll();
+  const targets=assignee==='all'?users():users().filter(u=>u.username===assignee);
+  targets.forEach(u=>{
+    pushNotif('New task: '+desc.slice(0,40),'Assigned by '+cu.fullName,u.username,'task');
+    sendMail(u,'New task assigned',`Hi ${u.fullName},\n\nYou have been assigned a new task:\n\n"${desc}"\n\nPhase: ${phase}\nPriority: ${priority}\nDeadline: ${deadline||'Not set'}\n\n— ${cu.fullName}`);
+  });
+  document.getElementById('pip-tasks').style.display='';
+}
+async function setTskSt(id,status){db.tasks[id].status=status;await fbSet('tasks',db.tasks);rTsk();rDash();}
+async function delTsk(id){if(!confirm('Delete task?'))return;delete db.tasks[id];await fbSet('tasks',db.tasks);renderAll();}
+
+// ══ PAPERS ══════════════════════════════════════════════════════════════
+function rPap(){
+  const n=papers().length;
+  document.getElementById('pc').textContent=n;
+  document.getElementById('pp').style.width=Math.min(100,n)+'%';
+  const rows=papers().map(p=>{
+    const rb=p.relevance==='High'?'bM':p.relevance==='Medium'?'bMo':'bm';
+    const nc=(p.paperNotes||[]).length;
+    const nb=nc>0?`<span class="b bB" style="margin-left:5px">${nc} note${nc>1?'s':''}</span>`:'';
+    return `<tr style="cursor:pointer" onclick="openPaper('${p.id}')">
+      <td style="font-weight:600;font-size:13px">${p.title}${nb}</td>
+      <td style="font-size:11px;color:var(--text2)">${p.authors||'—'}</td>
+      <td style="font-size:11px">${p.journal||'—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${p.domain||'—'}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:130px">${p.finding||'—'}</td>
+      <td style="font-size:11px">${p.method||'—'}</td>
+      <td><span class="b ${rb}">${p.relevance}</span></td>
+      <td><div style="display:flex;align-items:center;gap:5px"><div class="av" style="width:18px;height:18px;font-size:8px;background:${uc(p.addedby)}22;color:${uc(p.addedby)}">${ini(un(p.addedby))}</div><span style="font-size:11px">${un(p.addedby)}</span></div></td>
+      <td style="font-size:10px;color:var(--text3)">${p.date}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('t-pap').innerHTML=`<thead><tr><th>Title</th><th>Authors</th><th>Journal</th><th>Domain</th><th>Finding</th><th>Method</th><th>Rel.</th><th>By</th><th>Date</th></tr></thead><tbody>${rows||er(9)}</tbody>`;
+}
+
+function openPaper(pid){
+  const p=db.papers[pid];
+  if(!p) return;
+  const canEditPaper=canEdit()||p.addedby===cu.username;
+  const rb=p.relevance==='High'?'bM':p.relevance==='Medium'?'bMo':'bm';
+  const pnotes=p.paperNotes||[];
+
+  document.getElementById('pmod-body').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div style="flex:1">
+        <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px">${p.title}</div>
+        <div style="font-size:13px;color:var(--text2)">${p.authors||'—'}</div>
+      </div>
+      <span class="b ${rb}" style="font-size:13px;padding:5px 12px;margin-left:12px;flex-shrink:0">${p.relevance}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--bg3);border-radius:9px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Journal</div><div style="font-size:13px">${p.journal||'—'}</div></div>
+      <div style="background:var(--bg3);border-radius:9px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Domain</div><div style="font-size:13px">${p.domain||'—'}</div></div>
+      <div style="background:var(--bg3);border-radius:9px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Key Finding</div><div style="font-size:13px">${p.finding||'—'}</div></div>
+      <div style="background:var(--bg3);border-radius:9px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Method</div><div style="font-size:13px">${p.method||'—'}</div></div>
+    </div>
+    ${p.notes?`<div style="background:var(--bg3);border-radius:9px;padding:12px;margin-bottom:16px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Author Notes</div><div style="font-size:13px;color:var(--text2);line-height:1.7">${p.notes}</div></div>`:''}
+    ${p.link?`<div style="margin-bottom:16px"><a href="${p.link}" target="_blank" style="color:var(--blue2);font-size:13px;font-weight:500">↗ View paper (DOI)</a></div>`:''}
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:12px;color:var(--text3)">
+      <div class="av" style="width:22px;height:22px;font-size:9px;background:${uc(p.addedby)}22;color:${uc(p.addedby)}">${ini(un(p.addedby))}</div>
+      Added by <span style="color:var(--text2);font-weight:500">${un(p.addedby)}</span> on ${p.date}
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Notes on this paper</div>
+      ${pnotes.length===0?'<div style="color:var(--text3);font-size:13px;margin-bottom:14px">No notes yet.</div>':
+        pnotes.map((n,ni)=>`
+        <div style="background:var(--bg3);border-radius:9px;padding:12px;margin-bottom:8px;border-left:3px solid ${n.by===cu.username?'var(--blue2)':'var(--teal)'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:7px">
+              <div class="av" style="width:20px;height:20px;font-size:8px;background:${uc(n.by)}22;color:${uc(n.by)}">${ini(un(n.by))}</div>
+              <span style="font-size:12px;font-weight:600">${un(n.by)}</span>
+              <span class="b ${n.for==='all'?'bT':'bB'}" style="font-size:10px">→ ${n.for==='all'?'All team':un(n.for)}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:10px;color:var(--text3)">${n.date}</span>
+              ${canEdit()||n.by===cu.username?`<button onclick="delPaperNote('${pid}',${ni})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px">✕</button>`:''}
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.6">${n.note}</div>
+        </div>`).join('')
+      }
+      ${canEdit()?`
+      <div style="background:var(--bg4);border-radius:10px;padding:12px;margin-top:8px">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px">Add note on this paper</div>
+        <div class="fg" style="margin-bottom:8px"><label>For</label>
+          <select id="pnote-for" style="padding:8px 10px;border-radius:7px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:13px">
+            <option value="all">All team</option>
+            ${users().map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('')}
+          </select>
+        </div>
+        <textarea id="pnote-txt" placeholder="Write your note about this paper..." style="width:100%;padding:9px 11px;border-radius:8px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;resize:vertical;min-height:65px;outline:none;margin-bottom:8px"></textarea>
+        <button class="btn bp" onclick="addPaperNote('${pid}')">Post Note →</button>
+      </div>`:''}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      ${canEditPaper?`<button class="btn bd" onclick="delPaperFull('${pid}')">Delete Paper</button>`:''}
+      <button class="btn bo" onclick="cm('mo-paper')">Close</button>
+    </div>`;
+  om('mo-paper');
+}
+
+async function addPaperNote(pid){
+  const note=document.getElementById('pnote-txt')?.value?.trim();
+  const forWho=document.getElementById('pnote-for')?.value;
+  if(!note){alert('Write a note first.');return;}
+  if(!db.papers[pid].paperNotes) db.papers[pid].paperNotes=[];
+  db.papers[pid].paperNotes.push({note,for:forWho,by:cu.username,date:td()});
+  await fbSet('papers',db.papers);
+  const recipients=forWho==='all'?users():users().filter(u=>u.username===forWho);
+  recipients.filter(u=>u.username!==cu.username).forEach(u=>{
+    pushNotif('Note on: '+db.papers[pid].title.slice(0,35),note.slice(0,60),u.username,'papernote');
+    sendMail(u,'Note on paper: '+db.papers[pid].title,`Hi ${u.fullName},\n\n${cu.fullName} left a note on:\n"${db.papers[pid].title}"\n\nNote: ${note}\n\n— Capstone Hub`);
+  });
+  openPaper(pid); rPap();
+}
+
+async function delPaperNote(pid,ni){
+  if(!confirm('Delete note?'))return;
+  db.papers[pid].paperNotes.splice(ni,1);
+  await fbSet('papers',db.papers);
+  openPaper(pid); rPap();
+}
+
+async function delPaperFull(pid){
+  if(!confirm('Delete this paper?'))return;
+  delete db.papers[pid];
+  await fbSet('papers',db.papers);
+  cm('mo-paper'); rPap(); rDash();
+}
+
+async function addPaper(){
+  const title=g('p-ti');if(!title){alert('Enter paper title.');return;}
+  const id=uid();
+  db.papers[id]={id,title,authors:g('p-au'),journal:g('p-jo'),domain:g('p-do'),finding:g('p-fi'),method:g('p-me'),relevance:g('p-re'),link:g('p-li'),notes:g('p-no'),addedby:cu.username,date:td(),paperNotes:[]};
+  ['p-ti','p-au','p-jo','p-do','p-fi','p-me','p-li','p-no'].forEach(id2=>document.getElementById(id2).value='');
+  await fbSet('papers',db.papers);
+  rPap(); rDash();
+}
+
+// ══ ANALYTICS ══════════════════════════════════════════════════════════
+function rAna(){
+  const T=tasks();
+  const done=T.filter(t=>t.status==='Done').length,prog=T.filter(t=>t.status==='In Progress').length,pend=T.filter(t=>t.status==='Pending').length;
+  mkC('c-status','doughnut',{labels:['Done','In Progress','Pending'],datasets:[{data:[done,prog,pend],backgroundColor:['rgba(0,217,126,.65)','rgba(255,171,0,.65)','rgba(61,104,128,.4)'],borderWidth:0,hoverOffset:5}]},{cutout:'58%',plugins:{legend:{position:'right',labels:{color:'#7BA3C0',font:{size:11,family:'Outfit'}}}},scales:{}});
+  const mems=users().filter(u=>u.role!=='supervisor');
+  mkC('c-att','bar',{labels:mems.map(u=>u.fullName.split(' ')[0]),datasets:[{label:'Attended',data:mems.map(u=>meetings().filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:mems.map(u=>uc(u.username)+'88'),borderRadius:5}]},{plugins:{legend:{display:false}}});
+  mkC('c-pap-mem','bar',{labels:mems.map(u=>u.fullName.split(' ')[0]),datasets:[{label:'Papers',data:mems.map(u=>papers().filter(p=>p.addedby===u.username).length),backgroundColor:'rgba(155,109,255,.55)',borderRadius:5}]},{plugins:{legend:{display:false}}});
+  mkC('c-tsk-mem','bar',{labels:mems.map(u=>u.fullName.split(' ')[0]),datasets:[{label:'Assigned',data:mems.map(u=>T.filter(t=>t.assignee===u.username||t.assignee==='all').length),backgroundColor:'rgba(46,159,223,.45)',borderRadius:4},{label:'Done',data:mems.map(u=>T.filter(t=>(t.assignee===u.username||t.assignee==='all')&&t.status==='Done').length),backgroundColor:'rgba(0,217,126,.55)',borderRadius:4}]},{plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11}}}}});
+  const weeks=[],now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i*7);weeks.push(d.toISOString().slice(0,10));}
+  mkC('c-week','line',{labels:weeks.map(w=>w.slice(5)),datasets:[{label:'Tasks done',data:weeks.map((w,i)=>T.filter(t=>t.status==='Done'&&t.createdAt>=w&&t.createdAt<(weeks[i+1]||'9999')).length),borderColor:'var(--blue2)',backgroundColor:'rgba(46,159,223,.1)',fill:true,tension:.4,pointBackgroundColor:'var(--blue2)'}]},{plugins:{legend:{display:false}},elements:{point:{radius:4}}});
+}
+
+// ══ NOTES ══════════════════════════════════════════════════════════════
+function rNotes(){
+  document.getElementById('note-form').innerHTML=canEdit()?`<div class="card"><div class="ct">Post note / feedback</div><div class="fgrid"><div class="fg"><label>Title</label><input id="n-ti" placeholder="Note title"></div><div class="fg"><label>For</label><select id="n-fo"><option value="all">All team</option>${users().map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('')}</select></div><div class="fg full"><label>Message</label><textarea id="n-bo" placeholder="Your note or feedback..."></textarea></div></div><button class="btn bp" style="margin-top:6px" onclick="addNote()">Post Note →</button></div>`:'';
+  const myN=notes().filter(n=>n.for==='all'||n.for===cu.username||canEdit());
+  document.getElementById('note-list').innerHTML=myN.length===0?'<div style="color:var(--text3);text-align:center;padding:28px;font-size:13px">No notes yet.</div>':myN.slice().reverse().map(n=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px">
+        <div><span style="font-weight:700">${n.title}</span> <span style="font-size:11px;color:var(--text3)">→ ${n.for==='all'?'All team':un(n.for)}</span></div>
+        <div style="display:flex;gap:7px;align-items:center">
+          <span class="b bB">${un(n.by)}</span>
+          <span style="font-size:11px;color:var(--text3)">${n.date}</span>
+          ${canEdit()?`<button class="btn bsm bd" onclick="delNote('${n.id}')">Delete</button>`:''}
+        </div>
+      </div>
+      <div style="color:var(--text2);font-size:13px;line-height:1.7">${n.body}</div>
+    </div>`).join('');
+}
+
+async function addNote(){
+  const title=g('n-ti'),body=g('n-bo'),forWho=g('n-fo');
+  if(!title||!body){alert('Fill title and message.');return;}
+  const id=uid();
+  db.notes[id]={id,title,body,for:forWho,by:cu.username,date:td()};
+  await fbSet('notes',db.notes);
+  document.getElementById('n-ti').value=''; document.getElementById('n-bo').value='';
+  rNotes();
+  const recipients=forWho==='all'?users():users().filter(u=>u.username===forWho);
+  recipients.filter(u=>u.username!==cu.username).forEach(u=>{
+    pushNotif('Note from '+cu.fullName+': '+title,body.slice(0,60),u.username,'note');
+    sendMail(u,'New note: '+title,`Hi ${u.fullName},\n\n${cu.fullName} posted a note for you:\n\n"${title}"\n\n${body}\n\n— Capstone Hub`);
+  });
+  document.getElementById('pip-notes').style.display='';
+}
+
+async function delNote(id){if(!confirm('Delete note?'))return;delete db.notes[id];await fbSet('notes',db.notes);rNotes();}
+
+// ══ NOTIFICATIONS ══════════════════════════════════════════════════════
+async function pushNotif(title,msg,target,type){
+  if(!target){
+    // push to all
+    users().forEach(u=>{
+      const id=uid();
+      if(!db.notifs[u.username]) db.notifs[u.username]={};
+      db.notifs[u.username][id]={id,title,msg,type,date:td(),read:false};
+    });
+  } else {
+    const id=uid();
+    if(!db.notifs[target]) db.notifs[target]={};
+    db.notifs[target][id]={id,title,msg,type,date:td(),read:false};
+  }
+  await fbSet('notifs',db.notifs);
+  renderNotifs();
+}
+
+function renderNotifs(){
+  const mine=Object.values((db.notifs||{})[cu?.username]||{}).sort((a,b)=>a.date<b.date?1:-1);
+  const unread=mine.filter(n=>!n.read).length;
+  const nc=document.getElementById('nc');
+  if(unread>0){nc.textContent=unread;nc.style.display='inline-flex';}else nc.style.display='none';
+  document.getElementById('nl').innerHTML=mine.length===0?'<div style="color:var(--text3);text-align:center;padding:16px;font-size:13px">All caught up ✓</div>':mine.slice(0,8).map(n=>`<div class="ndi ${n.read?'':'unread'}"><div class="ndi-t">${n.title}</div><div class="ndi-s">${n.msg.slice(0,55)}${n.msg.length>55?'...':''}</div><div style="font-size:10px;color:var(--text3);margin-top:2px">${n.date}</div></div>`).join('');
+}
+
+async function toggleND(){
+  const nd=document.getElementById('ndrop');nd.classList.toggle('open');
+  if(nd.classList.contains('open')){
+    const mine=db.notifs?.[cu.username];
+    if(mine){Object.keys(mine).forEach(k=>{if(mine[k])mine[k].read=true;});await fbSet('notifs/'+cu.username,mine);}
+    renderNotifs();
+  }
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.notif-area'))document.getElementById('ndrop').classList.remove('open');});
+
+// ══ EMAILJS ══════════════════════════════════════════════════════════════
+function initEJS(){
+  const pk=localStorage.getItem('ejs_pk');
+  if(pk) try{emailjs.init(pk);}catch(e){}
+}
+function ejsReady(){return !!(localStorage.getItem('ejs_pk')&&localStorage.getItem('ejs_sv')&&localStorage.getItem('ejs_tm'));}
+function sendMail(user,subject,body){
+  if(!ejsReady()) return;
+  try{
+    emailjs.send(localStorage.getItem('ejs_sv'),localStorage.getItem('ejs_tm'),
+      {to_email:user.email,to_name:user.fullName,from_name:cu.fullName,subject,message:body}).catch(()=>{});
+  }catch(e){}
+}
+function saveEJS(){
+  const pk=g('ejs-pk'),sv=g('ejs-sv'),tm=g('ejs-tm');
+  if(!pk||!sv||!tm){showEJSSt('⚠ Fill all three fields.','ni-warn');return;}
+  localStorage.setItem('ejs_pk',pk);localStorage.setItem('ejs_sv',sv);localStorage.setItem('ejs_tm',tm);
+  try{emailjs.init(pk);}catch(e){}
+  showEJSSt('✅ Saved! Emails are now active.','ni-ok');
+  document.getElementById('ejs-current').textContent='🟢 Active';
+}
+function testEJS(){
+  if(!ejsReady()){showEJSSt('⚠ Save keys first.','ni-warn');return;}
+  emailjs.send(localStorage.getItem('ejs_sv'),localStorage.getItem('ejs_tm'),
+    {to_email:cu.email,to_name:cu.fullName,from_name:cu.fullName,subject:'Test — Capstone Hub',message:'Email notifications are working correctly!\n\n— Capstone Hub, Project #37'})
+    .then(()=>showEJSSt('✅ Test sent to '+cu.email,'ni-ok'))
+    .catch(e=>showEJSSt('❌ Failed: '+e.text,'ni-warn'));
+}
+function showEJSSt(msg,cls){const el=document.getElementById('ejs-status');el.textContent=msg;el.className='notice '+cls;el.style.display='block';setTimeout(()=>el.style.display='none',6000);}
+function loadEJSSettings(){
+  document.getElementById('ejs-pk').value=localStorage.getItem('ejs_pk')||'';
+  document.getElementById('ejs-sv').value=localStorage.getItem('ejs_sv')||'';
+  document.getElementById('ejs-tm').value=localStorage.getItem('ejs_tm')||'';
+  document.getElementById('ejs-current').textContent=ejsReady()?'🟢 Active — emails enabled':'⚪ Not configured';
+}
+
+// close modals on overlay click
+document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+</script>
+</body>
+</html>
