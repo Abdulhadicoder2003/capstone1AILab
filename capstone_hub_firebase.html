@@ -6,6 +6,7 @@
 <title>Capstone Hub — Project #37</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 :root{
@@ -132,6 +133,8 @@ tr:hover td{background:rgba(46,159,223,.025);}
 .bD{background:rgba(0,217,126,.1);color:var(--green);}
 .bI{background:rgba(255,171,0,.1);color:var(--amber);}
 .bP{background:rgba(61,104,128,.15);color:var(--text2);}
+.bR{background:rgba(155,109,255,.15);color:var(--purple);}
+.bRej{background:rgba(255,74,110,.1);color:var(--red);}
 .bH{background:rgba(255,74,110,.1);color:var(--red);}
 .bMe{background:rgba(255,171,0,.1);color:var(--amber);}
 .bL{background:rgba(61,104,128,.12);color:var(--text2);}
@@ -359,7 +362,10 @@ tr:hover td{background:rgba(46,159,223,.025);}
       <button class="btn bp" onclick="addPaper()">+ Add Paper</button>
     </div>
     <div class="card">
-      <div class="ct">All papers — <span id="pc">0</span> / 100</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="ct" style="margin-bottom:0">All papers — <span id="pc">0</span> / 100</div>
+        <button class="btn bs" onclick="downloadExcel()" style="font-size:12px;padding:6px 14px">⬇ Download Excel</button>
+      </div>
       <div class="prog" style="margin-bottom:12px"><div class="pf" id="pp" style="width:0%"></div></div>
       <div class="tw"><table id="t-pap"></table></div>
     </div>
@@ -456,6 +462,26 @@ tr:hover td{background:rgba(46,159,223,.025);}
 <div class="mo" id="mo-paper">
 <div class="mdl" style="width:620px;max-width:96vw">
   <div id="pmod-body"></div>
+</div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div class="mo" id="mo-review">
+<div class="mdl" style="width:480px">
+  <div class="mt">Review Submission</div>
+  <div style="background:var(--bg3);border-radius:9px;padding:12px;margin-bottom:16px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:4px" id="rev-title"></div>
+    <div style="font-size:12px;color:var(--text2)" id="rev-by"></div>
+  </div>
+  <div class="fg">
+    <label>Note to member <span style="color:var(--text3);font-weight:400">(optional — shown to member)</span></label>
+    <textarea id="rev-note" placeholder="Write feedback, corrections, or approval message..."></textarea>
+  </div>
+  <div class="mf">
+    <button class="btn bo" onclick="cm('mo-review')">Cancel</button>
+    <button class="btn bd" onclick="submitReview('reject')">✗ Reject</button>
+    <button class="btn bs" onclick="submitReview('approve')">✓ Approve</button>
+  </div>
 </div>
 </div>
 
@@ -595,16 +621,16 @@ function updateRoleOpts(){
   const hasLeader=users().some(u=>u.role==='leader');
   const hasSup=users().some(u=>u.role==='supervisor');
   const memberCount=users().filter(u=>u.role==='member').length;
-  const membersFull=memberCount>=3;
+  const membersFull=memberCount>=4;
   Array.from(sel.options).forEach(o=>{
     if(o.value==='leader'){o.disabled=hasLeader;o.textContent='Team Leader'+(hasLeader?' (taken)':'');}
     if(o.value==='supervisor'){o.disabled=hasSup;o.textContent='Supervisor'+(hasSup?' (taken)':'');}
-    if(o.value==='member'){o.disabled=membersFull;o.textContent='Team Member'+(membersFull?' (full — 3/3)':'');}
+    if(o.value==='member'){o.disabled=membersFull;o.textContent='Team Member'+(membersFull?' (full — 4/4)':'');}
   });
   const msgs=[];
   if(hasLeader) msgs.push('Leader taken');
   if(hasSup) msgs.push('Supervisor taken');
-  if(membersFull) msgs.push('Members full (3/3)');
+  if(membersFull) msgs.push('Members full (4/4)');
   hint.textContent=msgs.length?msgs.join(' · '):'';
 }
 
@@ -618,7 +644,7 @@ async function step1(){
   if(users().find(u=>u.email===em)){err('e1','Email already registered.');return;}
   if(ro==='leader'&&users().some(u=>u.role==='leader')){err('e1','A leader is already registered.');return;}
   if(ro==='supervisor'&&users().some(u=>u.role==='supervisor')){err('e1','A supervisor is already registered.');return;}
-  if(ro==='member'&&users().filter(u=>u.role==='member').length>=3){err('e1','Maximum 3 members allowed. The team is full.');return;}
+  if(ro==='member'&&users().filter(u=>u.role==='member').length>=4){err('e1','Maximum 4 members allowed. The team is full.');return;}
   reg={firstName:fn,lastName:ln,fullName:fn+' '+ln,email:em,username:un2,role:ro,password:btoa(pw)};
   otp=String(Math.floor(100000+Math.random()*900000));
   document.getElementById('em-show').textContent=em;
@@ -810,12 +836,41 @@ function rTsk(){
   document.getElementById('t-wh').innerHTML=`<option value="all">All members</option>`+users().map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('');
   const myT=canEdit()?tasks():tasks().filter(t=>t.assignee===cu.username||t.assignee==='all');
   const rows=myT.map(t=>{
-    const sb=t.status==='Done'?'bD':t.status==='In Progress'?'bI':'bP';
+    const sb=t.status==='Done'?'bD':t.status==='In Progress'?'bI':t.status==='Under Review'?'bR':t.status==='Rejected'?'bRej':'bP';
     const pb=t.priority==='High'?'bH':t.priority==='Medium'?'bMe':'bL';
-    const act=canEdit()?
-      `<select onchange="setTskSt('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:12px;font-family:'Outfit',sans-serif"><option ${t.status==='Pending'?'selected':''}>Pending</option><option ${t.status==='In Progress'?'selected':''}>In Progress</option><option ${t.status==='Done'?'selected':''}>Done</option></select><button class="btn bsm bd" onclick="delTsk('${t.id}')">✕</button>`:
-      (t.assignee===cu.username||t.assignee==='all')?`<button class="btn bsm bs" onclick="setTskSt('${t.id}','Done')">Mark done</button>`:'';
-    return `<tr><td style="font-weight:500;max-width:180px">${t.desc}</td><td><div style="display:flex;align-items:center;gap:6px"><div class="av" style="width:20px;height:20px;font-size:9px;background:${uc(t.assignee)}22;color:${uc(t.assignee)}">${t.assignee==='all'?'AL':ini(un(t.assignee))}</div><span style="font-size:12px">${un(t.assignee)}</span></div></td><td style="font-size:11px;color:var(--text2)">${t.phase.split('—')[0]}</td><td><span class="b ${pb}">${t.priority}</span></td><td style="font-size:12px;color:var(--text2)">${t.deadline||'—'}</td><td><span class="b ${sb}">${t.status}</span></td><td style="display:flex;gap:5px;align-items:center">${act}</td></tr>`;
+    let act='';
+    if(canEdit()){
+      act=`<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+        <select onchange="setTskSt('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:12px;font-family:'Outfit',sans-serif">
+          <option ${t.status==='Pending'?'selected':''}>Pending</option>
+          <option ${t.status==='In Progress'?'selected':''}>In Progress</option>
+          <option ${t.status==='Under Review'?'selected':''}>Under Review</option>
+          <option ${t.status==='Done'?'selected':''}>Done</option>
+          <option ${t.status==='Rejected'?'selected':''}>Rejected</option>
+        </select>
+        ${t.status==='Under Review'?`<button class="btn bsm bs" onclick="openReview('task','${t.id}')">Review ▸</button>`:''}
+        <button class="btn bsm bd" onclick="delTsk('${t.id}')">✕</button>
+      </div>`;
+    } else if(t.assignee===cu.username||t.assignee==='all'){
+      if(t.status==='Pending'||t.status==='In Progress'){
+        act=`<button class="btn bsm bs" onclick="setTskSt('${t.id}','Under Review')">Submit for review</button>`;
+      } else if(t.status==='Under Review'){
+        act=`<span style="font-size:11px;color:var(--purple)">⏳ Awaiting review</span>`;
+      } else if(t.status==='Done'){
+        act=`<span style="font-size:11px;color:var(--green)">✓ Approved</span>`;
+      } else if(t.status==='Rejected'){
+        act=`<div><span style="font-size:11px;color:var(--red)">✗ Rejected${t.reviewNote?': '+t.reviewNote:''}</span><br><button class="btn bsm bMe" style="margin-top:4px" onclick="setTskSt('${t.id}','In Progress')">Resubmit</button></div>`;
+      }
+    }
+    return `<tr>
+      <td style="font-weight:500;max-width:180px">${t.desc}</td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="av" style="width:20px;height:20px;font-size:9px;background:${uc(t.assignee)}22;color:${uc(t.assignee)}">${t.assignee==='all'?'AL':ini(un(t.assignee))}</div><span style="font-size:12px">${un(t.assignee)}</span></div></td>
+      <td style="font-size:11px;color:var(--text2)">${t.phase.split('—')[0]}</td>
+      <td><span class="b ${pb}">${t.priority}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${t.deadline||'—'}</td>
+      <td><span class="b ${sb}">${t.status}</span>${t.reviewNote&&t.status==='Done'?`<div style="font-size:10px;color:var(--text3)">Note: ${t.reviewNote}</div>`:''}</td>
+      <td>${act}</td>
+    </tr>`;
   }).join('');
   document.getElementById('t-tsk').innerHTML=`<thead><tr><th>Task</th><th>Assigned to</th><th>Phase</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows||er(7)}</tbody>`;
 }
@@ -834,8 +889,67 @@ async function saveTask(){
   });
   document.getElementById('pip-tasks').style.display='';
 }
-async function setTskSt(id,status){db.tasks[id].status=status;await fbSet('tasks',db.tasks);rTsk();rDash();}
+async function setTskSt(id,status){
+  db.tasks[id].status=status;
+  if(status==='Under Review'){
+    // notify leader and supervisor
+    users().filter(u=>u.role==='leader'||u.role==='supervisor').forEach(u=>{
+      pushNotif('Task submitted for review',db.tasks[id].desc.slice(0,50)+' — submitted by '+un(db.tasks[id].assignee),u.username,'review');
+      sendMail(u,'Task ready for review',`Hi ${u.fullName},\n\n${un(db.tasks[id].assignee)} submitted a task for your review:\n\n"${db.tasks[id].desc}"\n\nPlease log in to approve or reject.\n\n— Capstone Hub`);
+    });
+    document.getElementById('pip-tasks').style.display='';
+  }
+  await fbSet('tasks',db.tasks);rTsk();rDash();
+}
 async function delTsk(id){if(!confirm('Delete task?'))return;delete db.tasks[id];await fbSet('tasks',db.tasks);renderAll();}
+
+// ══ REVIEW MODAL ══════════════════════════════════════════════════════════
+let reviewTarget={type:null,id:null};
+function openReview(type,id){
+  reviewTarget={type,id};
+  const item=type==='task'?db.tasks[id]:db.papers[id];
+  const name=type==='task'?item.desc:item.title;
+  const submittedBy=type==='task'?un(item.assignee):un(item.addedby);
+  document.getElementById('rev-title').textContent=(type==='task'?'Task: ':'Paper: ')+name.slice(0,60);
+  document.getElementById('rev-by').textContent='Submitted by: '+submittedBy;
+  document.getElementById('rev-note').value='';
+  om('mo-review');
+}
+async function submitReview(decision){
+  const note=document.getElementById('rev-note').value.trim();
+  const {type,id}=reviewTarget;
+  if(type==='task'){
+    db.tasks[id].status=decision==='approve'?'Done':'Rejected';
+    db.tasks[id].reviewNote=note;
+    db.tasks[id].reviewBy=cu.username;
+    db.tasks[id].reviewDate=td();
+    await fbSet('tasks',db.tasks);
+    const assignee=db.tasks[id].assignee;
+    const targets=assignee==='all'?users():users().filter(u=>u.username===assignee);
+    targets.forEach(u=>{
+      const msg=decision==='approve'?'Your task was approved!':'Your task was rejected'+(note?': '+note:'.');
+      pushNotif(decision==='approve'?'Task approved ✓':'Task rejected ✗',msg,u.username,'review');
+      sendMail(u,decision==='approve'?'Task approved':'Task rejected',`Hi ${u.fullName},\n\n${cu.fullName} has ${decision==='approve'?'approved':'rejected'} your task:\n\n"${db.tasks[id].desc}"${note?'\n\nNote: '+note:''}\n\n— Capstone Hub`);
+    });
+    rTsk();
+  } else {
+    db.papers[id].reviewStatus=decision==='approve'?'Approved':'Rejected';
+    db.papers[id].reviewNote=note;
+    db.papers[id].reviewBy=cu.username;
+    db.papers[id].reviewDate=td();
+    await fbSet('papers',db.papers);
+    const addedby=db.papers[id].addedby;
+    const u=users().find(u=>u.username===addedby);
+    if(u){
+      const msg=decision==='approve'?'Your paper was approved!':'Your paper was rejected'+(note?': '+note:'.');
+      pushNotif(decision==='approve'?'Paper approved ✓':'Paper rejected ✗',msg,u.username,'review');
+      sendMail(u,decision==='approve'?'Paper approved':'Paper rejected',`Hi ${u.fullName},\n\n${cu.fullName} has ${decision==='approve'?'approved':'rejected'} your paper:\n\n"${db.papers[id].title}"${note?'\n\nNote: '+note:''}\n\n— Capstone Hub`);
+    }
+    rPap();
+  }
+  cm('mo-review');
+  rDash();
+}
 
 // ══ PAPERS ══════════════════════════════════════════════════════════════
 function rPap(){
@@ -846,6 +960,8 @@ function rPap(){
     const rb=p.relevance==='High'?'bM':p.relevance==='Medium'?'bMo':'bm';
     const nc=(p.paperNotes||[]).length;
     const nb=nc>0?`<span class="b bB" style="margin-left:5px">${nc} note${nc>1?'s':''}</span>`:'';
+    const rs=p.reviewStatus==='Approved'?'<span class="b bD">Approved</span>':p.reviewStatus==='Rejected'?'<span class="b bRej">Rejected</span>':'<span class="b bP">Pending review</span>';
+    const reviewBtn=canEdit()&&!p.reviewStatus?`<span onclick="event.stopPropagation();openReview('paper','${p.id}')" class="b bR" style="cursor:pointer;margin-left:6px">Review ▸</span>`:'';
     return `<tr style="cursor:pointer" onclick="openPaper('${p.id}')">
       <td style="font-weight:600;font-size:13px">${p.title}${nb}</td>
       <td style="font-size:11px;color:var(--text2)">${p.authors||'—'}</td>
@@ -856,9 +972,10 @@ function rPap(){
       <td><span class="b ${rb}">${p.relevance}</span></td>
       <td><div style="display:flex;align-items:center;gap:5px"><div class="av" style="width:18px;height:18px;font-size:8px;background:${uc(p.addedby)}22;color:${uc(p.addedby)}">${ini(un(p.addedby))}</div><span style="font-size:11px">${un(p.addedby)}</span></div></td>
       <td style="font-size:10px;color:var(--text3)">${p.date}</td>
+      <td>${rs}${reviewBtn}</td>
     </tr>`;
   }).join('');
-  document.getElementById('t-pap').innerHTML=`<thead><tr><th>Title</th><th>Authors</th><th>Journal</th><th>Domain</th><th>Finding</th><th>Method</th><th>Rel.</th><th>By</th><th>Date</th></tr></thead><tbody>${rows||er(9)}</tbody>`;
+  document.getElementById('t-pap').innerHTML=`<thead><tr><th>Title</th><th>Authors</th><th>Journal</th><th>Domain</th><th>Finding</th><th>Method</th><th>Rel.</th><th>By</th><th>Date</th><th>Review</th></tr></thead><tbody>${rows||er(10)}</tbody>`;
 }
 
 function openPaper(pid){
@@ -954,6 +1071,64 @@ async function delPaperFull(pid){
   delete db.papers[pid];
   await fbSet('papers',db.papers);
   cm('mo-paper'); rPap(); rDash();
+}
+
+function downloadExcel(){
+  const allPapers=papers();
+  if(allPapers.length===0){alert('No papers to export yet.');return;}
+
+  const rows=allPapers.map((p,i)=>({
+    '#': i+1,
+    'Title': p.title||'',
+    'Authors & Year': p.authors||'',
+    'Journal / Source': p.journal||'',
+    'Domain / Application': p.domain||'',
+    'Key Finding': p.finding||'',
+    'Method / Approach': p.method||'',
+    'Relevance': p.relevance||'',
+    'DOI / Link': p.link||'',
+    'Added By': un(p.addedby)||'',
+    'Date Added': p.date||'',
+    'Review Status': p.reviewStatus||'Pending',
+    'Review Note': p.reviewNote||'',
+    'Reviewed By': p.reviewBy?un(p.reviewBy):'',
+    'Author Notes': p.notes||''
+  }));
+
+  const ws=XLSX.utils.json_to_sheet(rows);
+
+  // Column widths
+  ws['!cols']=[
+    {wch:4},{wch:45},{wch:22},{wch:22},{wch:22},
+    {wch:35},{wch:20},{wch:12},{wch:30},{wch:18},
+    {wch:12},{wch:14},{wch:30},{wch:16},{wch:35}
+  ];
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Papers Survey');
+
+  // Add a summary sheet
+  const summary=[
+    ['AI Lab Companion — Capstone Project #37'],
+    ['Literature Survey Export'],
+    ['Generated on: '+new Date().toLocaleDateString()],
+    [''],
+    ['Total papers collected:', allPapers.length],
+    ['Target:', 100],
+    ['Progress:', Math.round(allPapers.length/100*100)+'%'],
+    [''],
+    ['Papers by member:'],
+    ...users().map(u=>[u.fullName, allPapers.filter(p=>p.addedby===u.username).length+' papers']),
+    [''],
+    ['Approved papers:', allPapers.filter(p=>p.reviewStatus==='Approved').length],
+    ['Pending review:', allPapers.filter(p=>!p.reviewStatus||p.reviewStatus==='Pending').length],
+    ['Rejected papers:', allPapers.filter(p=>p.reviewStatus==='Rejected').length],
+  ];
+  const ws2=XLSX.utils.aoa_to_sheet(summary);
+  ws2['!cols']=[{wch:30},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Summary');
+
+  XLSX.writeFile(wb,'Papers_Survey_Project37_'+td()+'.xlsx');
 }
 
 function checkDupTitle(val){
