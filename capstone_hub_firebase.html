@@ -315,7 +315,7 @@ tr:hover td{background:rgba(46,159,223,.025);}
     <div class="ph"><div><div class="pt">Dashboard</div><div class="ps">Live team overview — synced in real time</div></div></div>
     <div class="g4" id="d-stats"></div>
     <div class="g2">
-      <div class="chart-c"><div class="ct">Tasks by phase</div><canvas id="c-phase"></canvas></div>
+      <div class="chart-c"><div class="ct">Tasks by priority</div><canvas id="c-phase"></canvas></div>
       <div class="chart-c"><div class="ct">Papers collected (target 100)</div><canvas id="c-papers"></canvas></div>
     </div>
     <div class="g2">
@@ -326,8 +326,13 @@ tr:hover td{background:rgba(46,159,223,.025);}
 
   <!-- MEMBERS -->
   <div id="pg-members" class="page">
-    <div class="ph"><div><div class="pt">Members</div><div class="ps">Registered accounts</div></div></div>
-    <div class="card"><div class="tw"><table id="t-mem"></table></div></div>
+    <div class="ph"><div><div class="pt">Members</div><div class="ps">Click any member to see full performance</div></div></div>
+    <div class="card" style="margin-bottom:14px"><div class="tw"><table id="t-mem"></table></div></div>
+    <!-- COMPETITION LEADERBOARD -->
+    <div class="card" id="competition-card">
+      <div class="ct">Papers competition</div>
+      <div id="competition-board"></div>
+    </div>
   </div>
 
   <!-- MEETINGS -->
@@ -442,19 +447,17 @@ tr:hover td{background:rgba(46,159,223,.025);}
 
 <div class="mo" id="mo-tsk">
 <div class="mdl">
-  <div class="mt">Assign Task</div>
+  <div class="mt" id="tsk-modal-title">Assign Task</div>
   <div class="fgrid">
     <div class="fg full"><label>Task description</label><input id="t-ds" placeholder="What needs to be done"></div>
     <div class="fg"><label>Assign to</label><select id="t-wh"></select></div>
-    <div class="fg"><label>Phase</label>
-      <select id="t-ph"><option>Phase 0 — Setup</option><option>Phase 1 — Hardware</option><option>Phase 2 — Vision</option><option>Phase 3 — LLM Engine</option><option>Phase 4 — Orchestrator</option><option>Phase 5 — Dashboard</option><option>Phase 6 — PCB</option><option>Phase 7 — Validation</option><option>Documentation</option></select>
-    </div>
     <div class="fg"><label>Priority</label><select id="t-pr"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
-    <div class="fg"><label>Deadline</label><input type="date" id="t-dl"></div>
+    <div class="fg"><label>Deadline date</label><input type="date" id="t-dl"></div>
+    <div class="fg"><label>Deadline time</label><input type="time" id="t-tm" value="23:59"></div>
   </div>
   <div class="mf">
     <button class="btn bd" onclick="cm('mo-tsk')">Cancel</button>
-    <button class="btn bp" onclick="saveTask()">Assign Task</button>
+    <button class="btn bp" id="tsk-save-btn" onclick="saveTask()">Assign Task</button>
   </div>
 </div>
 </div>
@@ -481,6 +484,29 @@ tr:hover td{background:rgba(46,159,223,.025);}
     <button class="btn bo" onclick="cm('mo-review')">Cancel</button>
     <button class="btn bd" onclick="submitReview('reject')">✗ Reject</button>
     <button class="btn bs" onclick="submitReview('approve')">✓ Approve</button>
+  </div>
+</div>
+</div>
+
+<!-- MEMBER PROFILE MODAL -->
+<div class="mo" id="mo-member">
+<div class="mdl" style="width:620px;max-width:96vw;max-height:92vh">
+  <div id="member-profile-body"></div>
+</div>
+</div>
+
+<!-- EXTEND DEADLINE MODAL -->
+<div class="mo" id="mo-extend">
+<div class="mdl" style="width:400px">
+  <div class="mt">Extend Deadline</div>
+  <div style="background:var(--bg3);border-radius:9px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:var(--text2)" id="ext-task-name"></div>
+  <div class="fgrid">
+    <div class="fg"><label>New deadline date</label><input type="date" id="ext-dl"></div>
+    <div class="fg"><label>New deadline time</label><input type="time" id="ext-tm" value="23:59"></div>
+  </div>
+  <div class="mf">
+    <button class="btn bd" onclick="cm('mo-extend')">Cancel</button>
+    <button class="btn bp" onclick="saveExtend()">Extend Deadline</button>
   </div>
 </div>
 </div>
@@ -699,6 +725,7 @@ async function login(){
   document.getElementById('ni-settings').style.display=canEdit()?'flex':'none';
   initEJS();
   startPolling();
+  startDeadlineChecker();
   renderAll();
 }
 
@@ -753,12 +780,22 @@ function rDash(){
     <div class="stat sa"><div class="sl">Papers</div><div class="sv" style="color:var(--amber)">${papers().length}</div><div class="ss">/ 100 target</div></div>
     <div class="stat sp"><div class="sl">Members</div><div class="sv" style="color:var(--purple)">${users().length}</div><div class="ss">Registered</div></div>`;
 
-  const phases={};
-  T.forEach(t=>{if(!phases[t.phase])phases[t.phase]={tot:0,done:0};phases[t.phase].tot++;if(t.status==='Done')phases[t.phase].done++;});
+  // Group by priority instead of phase (phase removed from task model)
+  const pgroups={High:{tot:0,done:0},Medium:{tot:0,done:0},Low:{tot:0,done:0}};
+  T.forEach(t=>{
+    const g2=t.priority||'Medium';
+    if(!pgroups[g2]) pgroups[g2]={tot:0,done:0};
+    pgroups[g2].tot++;
+    if(t.status==='Done') pgroups[g2].done++;
+  });
   mkC('c-phase','bar',{
-    labels:Object.keys(phases).map(p=>p.split('—')[0].trim()),
-    datasets:[{label:'Done',data:Object.values(phases).map(p=>p.done),backgroundColor:'rgba(0,217,126,.55)',borderRadius:4},{label:'Left',data:Object.values(phases).map(p=>p.tot-p.done),backgroundColor:'rgba(46,159,223,.25)',borderRadius:4}]
-  },{scales:{x:{stacked:true,ticks:{color:'#3D6880',font:{size:10,family:'JetBrains Mono'}},grid:{color:'rgba(46,159,223,0.05)'}},y:{stacked:true,ticks:{color:'#3D6880'},grid:{color:'rgba(46,159,223,0.05)'}}},plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11}}}}});
+    labels:Object.keys(pgroups),
+    datasets:[
+      {label:'Done',data:Object.values(pgroups).map(p=>p.done),backgroundColor:'rgba(0,217,126,.55)',borderRadius:4},
+      {label:'Left',data:Object.values(pgroups).map(p=>p.tot-p.done),backgroundColor:'rgba(46,159,223,.25)',borderRadius:4},
+      {label:'Overdue',data:Object.keys(pgroups).map(k=>T.filter(t=>(t.priority||'Medium')===k&&isOverdue(t)).length),backgroundColor:'rgba(255,74,110,.55)',borderRadius:4}
+    ]
+  },{scales:{x:{stacked:false,ticks:{color:'#3D6880',font:{size:11,family:'Outfit'}},grid:{color:'rgba(46,159,223,0.05)'}},y:{ticks:{color:'#3D6880'},grid:{color:'rgba(46,159,223,0.05)'}}},plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11}}}}});
 
   const pn=Math.min(100,papers().length);
   mkC('c-papers','doughnut',{labels:['Collected','Remaining'],datasets:[{data:[pn,Math.max(0,100-pn)],backgroundColor:['rgba(0,217,126,.65)','rgba(46,159,223,.1)'],borderWidth:0}]},{cutout:'70%',plugins:{legend:{display:false}},scales:{}});
@@ -789,20 +826,167 @@ function rDash(){
 
 // ══ MEMBERS ══════════════════════════════════════════════════════════════
 function rMem(){
+  const T=tasks(); const P=papers(); const M=meetings();
   const rows=users().map(u=>{
-    const mt=tasks().filter(t=>t.assignee===u.username||t.assignee==='all');
+    const mt=T.filter(t=>t.assignee===u.username||t.assignee==='all');
     const md=mt.filter(t=>t.status==='Done').length;
-    const att=meetings().filter(m=>m.attendance&&m.attendance[u.username]).length;
-    return `<tr>
+    const mp=P.filter(p=>p.addedby===u.username).length;
+    const mpApproved=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length;
+    const att=M.filter(m=>m.attendance&&m.attendance[u.username]).length;
+    return `<tr style="cursor:pointer" onclick="openMemberProfile('${u.username}')">
       <td><div style="display:flex;align-items:center;gap:9px"><div class="av" style="width:30px;height:30px;font-size:11px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div><div><div style="font-weight:600">${u.fullName}</div><div style="font-size:11px;color:var(--text3)">@${u.username}</div></div></div></td>
       <td style="font-size:12px;color:var(--text2)">${u.email}</td>
       <td><span class="b bT">${rl(u.role)}</span></td>
       <td>${md}/${mt.length}</td>
-      <td>${att}/${meetings().length}</td>
+      <td>${att}/${M.length}</td>
+      <td><span style="color:var(--purple);font-weight:600">${mp}</span> <span style="font-size:11px;color:var(--text3)">(${mpApproved} approved)</span></td>
       <td style="font-size:11px;color:var(--text3)">${u.createdAt}</td>
     </tr>`;
   }).join('');
-  document.getElementById('t-mem').innerHTML=`<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tasks</th><th>Meetings</th><th>Joined</th></tr></thead><tbody>${rows||er(6)}</tbody>`;
+  document.getElementById('t-mem').innerHTML=`<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tasks done</th><th>Meetings</th><th>Papers</th><th>Joined</th></tr></thead><tbody>${rows||er(7)}</tbody>`;
+  renderCompetition();
+}
+
+function renderCompetition(){
+  const P=papers(); const allMems=users();
+  const sorted=[...allMems].sort((a,b)=>P.filter(p=>p.addedby===b.username&&p.reviewStatus==='Approved').length - P.filter(p=>p.addedby===a.username&&p.reviewStatus==='Approved').length);
+  const total=P.filter(p=>p.reviewStatus==='Approved').length;
+  const medals=['🥇','🥈','🥉'];
+  const goal=100;
+  let html=`<div style="margin-bottom:12px">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">Approved papers towards 100 goal</div>
+    <div class="prog"><div class="pf" style="width:${Math.min(100,total)}%;background:var(--purple)"></div></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:4px">${total}/100 papers approved</div>
+  </div>`;
+  if(total>=goal){
+    html+=`<div style="background:linear-gradient(135deg,rgba(155,109,255,.2),rgba(0,201,177,.1));border:1px solid var(--purple);border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">
+      <div style="font-size:24px;margin-bottom:6px">🎉</div>
+      <div style="font-size:16px;font-weight:700;color:var(--purple)">100 Papers Goal Reached!</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px">Congratulations to the entire team — Project #37 literature survey is complete!</div>
+    </div>`;
+  }
+  html+=`<table style="width:100%;border-collapse:collapse">
+    <thead><tr>
+      <th style="text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Rank</th>
+      <th style="text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Member</th>
+      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Approved Papers</th>
+      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Total Added</th>
+      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Share</th>
+    </tr></thead><tbody>`;
+  sorted.forEach((u,i)=>{
+    const approved=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length;
+    const total2=P.filter(p=>p.addedby===u.username).length;
+    const share=total>0?Math.round(approved/total*100):0;
+    const medal=medals[i]||'';
+    const isLeader=i===0&&approved>0;
+    html+=`<tr style="${isLeader?'background:rgba(155,109,255,.06)':''}">
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-size:16px">${medal||'#'+(i+1)}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="av" style="width:24px;height:24px;font-size:9px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div>
+          <span style="font-size:13px;font-weight:${isLeader?'700':'500'}">${u.fullName}</span>
+          ${isLeader?'<span class="b bR" style="font-size:10px">Leader 👑</span>':''}
+        </div>
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-family:JetBrains Mono,monospace;font-size:14px;color:var(--purple);font-weight:600">${approved}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-size:13px;color:var(--text2)">${total2}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-size:12px;color:var(--text3)">${share}%</td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('competition-board').innerHTML=html;
+}
+
+function openMemberProfile(username){
+  const u=db.users[username]; if(!u) return;
+  const T=tasks(); const P=papers(); const M=meetings();
+  const mt=T.filter(t=>t.assignee===u.username||t.assignee==='all');
+  const done=mt.filter(t=>t.status==='Done').length;
+  const review=mt.filter(t=>t.status==='Under Review').length;
+  const rejected=mt.filter(t=>t.status==='Rejected').length;
+  const pending=mt.filter(t=>t.status==='Pending'||t.status==='In Progress').length;
+  const overdue=mt.filter(t=>isOverdue(t)&&t.status!=='Done').length;
+  const att=M.filter(m=>m.attendance&&m.attendance[u.username]).length;
+  const missed=M.length-att;
+  const papAll=P.filter(p=>p.addedby===u.username).length;
+  const papApproved=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length;
+  const papRej=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Rejected').length;
+  const papPend=papAll-papApproved-papRej;
+  const cid='chart-member-'+username;
+
+  document.getElementById('member-profile-body').innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div class="av" style="width:52px;height:52px;font-size:18px;background:${uc(username)}22;color:${uc(username)}">${ini(u.fullName)}</div>
+      <div>
+        <div style="font-size:20px;font-weight:800">${u.fullName}</div>
+        <div style="font-size:13px;color:var(--text2)">@${u.username} · ${u.email}</div>
+        <span class="b bT" style="margin-top:4px;display:inline-block">${rl(u.role)}</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Tasks done</div>
+        <div style="font-size:26px;font-weight:700;color:var(--green);font-family:JetBrains Mono,monospace">${done}</div>
+        <div style="font-size:11px;color:var(--text3)">of ${mt.length}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Attendance</div>
+        <div style="font-size:26px;font-weight:700;color:var(--teal);font-family:JetBrains Mono,monospace">${att}</div>
+        <div style="font-size:11px;color:var(--text3)">of ${M.length}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Papers approved</div>
+        <div style="font-size:26px;font-weight:700;color:var(--purple);font-family:JetBrains Mono,monospace">${papApproved}</div>
+        <div style="font-size:11px;color:var(--text3)">of ${papAll} added</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Overdue tasks</div>
+        <div style="font-size:26px;font-weight:700;color:${overdue>0?'var(--red)':'var(--text2)'};font-family:JetBrains Mono,monospace">${overdue}</div>
+        <div style="font-size:11px;color:var(--text3)">past deadline</div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg3);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Performance overview</div>
+      <canvas id="${cid}" style="max-height:220px"></canvas>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn bo" onclick="cm('mo-member')">Close</button>
+    </div>`;
+
+  om('mo-member');
+
+  // Draw chart after modal opens
+  setTimeout(()=>{
+    if(CHS[cid]) CHS[cid].destroy();
+    const ctx=document.getElementById(cid)?.getContext('2d');
+    if(!ctx) return;
+    CHS[cid]=new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:['Tasks Done','Tasks Pending','Tasks Overdue','Meetings Attended','Meetings Missed','Papers Approved','Papers Pending','Papers Rejected'],
+        datasets:[{
+          data:[done,pending,overdue,att,missed,papApproved,papPend,papRej],
+          backgroundColor:[
+            'rgba(0,217,126,.65)','rgba(255,171,0,.55)','rgba(255,74,110,.65)',
+            'rgba(0,201,177,.65)','rgba(255,74,110,.55)',
+            'rgba(155,109,255,.65)','rgba(255,171,0,.45)','rgba(255,74,110,.45)'
+          ],
+          borderRadius:5
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:true,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:'#3D6880',font:{size:10,family:'Outfit'}},grid:{color:'rgba(46,159,223,0.05)'}},
+          y:{ticks:{color:'#3D6880',stepSize:1},grid:{color:'rgba(46,159,223,0.05)'}}
+        }
+      }
+    });
+  },100);
 }
 
 // ══ MEETINGS ══════════════════════════════════════════════════════════════
@@ -831,13 +1015,85 @@ async function saveMtg(){
 async function delMtg(id){if(!confirm('Delete?'))return;delete db.meetings[id];await fbSet('meetings',db.meetings);renderAll();}
 
 // ══ TASKS ══════════════════════════════════════════════════════════════
+// ══ DATETIME HELPERS ════════════════════════════════════════════════════════
+function dtNow(){return new Date().toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});}
+function fmtDt(dateStr,timeStr){
+  if(!dateStr) return '—';
+  const t=timeStr||'23:59';
+  const d=new Date(dateStr+'T'+t);
+  return d.toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
+}
+function isOverdue(task){
+  if(!task.deadline) return false;
+  if(task.status==='Done') return false;
+  const dl=new Date(task.deadline+'T'+(task.deadlineTime||'23:59'));
+  return new Date()>dl;
+}
+
+// ══ DEADLINE CHECKER ════════════════════════════════════════════════════════
+let deadlineTimer=null;
+function startDeadlineChecker(){
+  if(deadlineTimer) clearInterval(deadlineTimer);
+  deadlineTimer=setInterval(checkDeadlines,60000);
+  checkDeadlines();
+}
+async function checkDeadlines(){
+  const now=new Date(); let changed=false;
+  tasks().forEach(t=>{
+    if((t.status==='Pending'||t.status==='In Progress')&&t.deadline){
+      const dl=new Date(t.deadline+'T'+(t.deadlineTime||'23:59'));
+      if(now>dl&&!t.overdueNotified){
+        db.tasks[t.id].overdueNotified=true; changed=true;
+        users().filter(u=>u.role==='leader'||u.role==='supervisor').forEach(u=>{
+          pushNotif('Overdue: '+t.desc.slice(0,40),`Assigned to ${un(t.assignee)} — deadline: ${fmtDt(t.deadline,t.deadlineTime)}`,u.username,'overdue');
+          sendMail(u,'Task overdue: '+t.desc,`Hi ${u.fullName},\n\nTask overdue:\n\n"${t.desc}"\nAssigned to: ${un(t.assignee)}\nDeadline: ${fmtDt(t.deadline,t.deadlineTime)}\nStatus: ${t.status}\n\n— Capstone Hub`);
+        });
+        const targets=t.assignee==='all'?users():users().filter(u=>u.username===t.assignee);
+        targets.filter(u=>u.role==='member').forEach(u=>{
+          pushNotif('Your task is overdue!',`"${t.desc}" — deadline: ${fmtDt(t.deadline,t.deadlineTime)}`,u.username,'overdue');
+        });
+      }
+    }
+  });
+  if(changed) await fbSet('tasks',db.tasks);
+}
+
+// ══ EXTEND DEADLINE ════════════════════════════════════════════════════════
+let extendTaskId=null;
+function openExtend(tid){
+  extendTaskId=tid;
+  const t=db.tasks[tid];
+  document.getElementById('ext-task-name').textContent=t.desc;
+  document.getElementById('ext-dl').value=t.deadline||'';
+  document.getElementById('ext-tm').value=t.deadlineTime||'23:59';
+  om('mo-extend');
+}
+async function saveExtend(){
+  const dl=document.getElementById('ext-dl').value;
+  const tm=document.getElementById('ext-tm').value;
+  if(!dl){alert('Select a new deadline date.');return;}
+  db.tasks[extendTaskId].deadline=dl;
+  db.tasks[extendTaskId].deadlineTime=tm;
+  db.tasks[extendTaskId].overdueNotified=false;
+  await fbSet('tasks',db.tasks);
+  cm('mo-extend'); rTsk();
+  const t=db.tasks[extendTaskId];
+  const targets=t.assignee==='all'?users():users().filter(u=>u.username===t.assignee);
+  targets.forEach(u=>{
+    pushNotif('Deadline extended: '+t.desc.slice(0,40),'New deadline: '+fmtDt(dl,tm),u.username,'extend');
+    sendMail(u,'Deadline extended',`Hi ${u.fullName},\n\nDeadline extended for:\n"${t.desc}"\n\nNew deadline: ${fmtDt(dl,tm)}\n\n— ${cu.fullName}`);
+  });
+}
+
 function rTsk(){
   document.getElementById('tsk-btn').innerHTML=canEdit()?`<button class="btn bp" onclick="openTsk()">+ Assign Task</button>`:'';
   document.getElementById('t-wh').innerHTML=`<option value="all">All members</option>`+users().map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('');
   const myT=canEdit()?tasks():tasks().filter(t=>t.assignee===cu.username||t.assignee==='all');
   const rows=myT.map(t=>{
+    const overdue=isOverdue(t);
     const sb=t.status==='Done'?'bD':t.status==='In Progress'?'bI':t.status==='Under Review'?'bR':t.status==='Rejected'?'bRej':'bP';
     const pb=t.priority==='High'?'bH':t.priority==='Medium'?'bMe':'bL';
+    const dlDisplay=t.deadline?`<span style="color:${overdue?'var(--red)':'var(--text2)'};font-size:12px">${fmtDt(t.deadline,t.deadlineTime)}${overdue?' ⚠':''}</span>`:'—';
     let act='';
     if(canEdit()){
       act=`<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
@@ -849,6 +1105,7 @@ function rTsk(){
           <option ${t.status==='Rejected'?'selected':''}>Rejected</option>
         </select>
         ${t.status==='Under Review'?`<button class="btn bsm bs" onclick="openReview('task','${t.id}')">Review ▸</button>`:''}
+        <button class="btn bsm bo" onclick="openExtend('${t.id}')" title="Extend deadline">⏱</button>
         <button class="btn bsm bd" onclick="delTsk('${t.id}')">✕</button>
       </div>`;
     } else if(t.assignee===cu.username||t.assignee==='all'){
@@ -859,43 +1116,47 @@ function rTsk(){
       } else if(t.status==='Done'){
         act=`<span style="font-size:11px;color:var(--green)">✓ Approved</span>`;
       } else if(t.status==='Rejected'){
-        act=`<div><span style="font-size:11px;color:var(--red)">✗ Rejected${t.reviewNote?': '+t.reviewNote:''}</span><br><button class="btn bsm bMe" style="margin-top:4px" onclick="setTskSt('${t.id}','In Progress')">Resubmit</button></div>`;
+        act=`<div><span style="font-size:11px;color:var(--red)">✗ ${t.reviewNote||'Rejected'}</span><br><button class="btn bsm bMe" style="margin-top:4px" onclick="setTskSt('${t.id}','In Progress')">Resubmit</button></div>`;
       }
     }
-    return `<tr>
-      <td style="font-weight:500;max-width:180px">${t.desc}</td>
+    return `<tr ${overdue&&t.status!=='Done'?'style="background:rgba(255,74,110,.03)"':''}>
+      <td style="font-weight:500;max-width:180px">${t.desc}${overdue&&t.status!=='Done'?'<span class="b bRej" style="margin-left:5px;font-size:10px">Overdue</span>':''}</td>
       <td><div style="display:flex;align-items:center;gap:6px"><div class="av" style="width:20px;height:20px;font-size:9px;background:${uc(t.assignee)}22;color:${uc(t.assignee)}">${t.assignee==='all'?'AL':ini(un(t.assignee))}</div><span style="font-size:12px">${un(t.assignee)}</span></div></td>
-      <td style="font-size:11px;color:var(--text2)">${t.phase.split('—')[0]}</td>
       <td><span class="b ${pb}">${t.priority}</span></td>
-      <td style="font-size:12px;color:var(--text2)">${t.deadline||'—'}</td>
-      <td><span class="b ${sb}">${t.status}</span>${t.reviewNote&&t.status==='Done'?`<div style="font-size:10px;color:var(--text3)">Note: ${t.reviewNote}</div>`:''}</td>
+      <td>${dlDisplay}</td>
+      <td><span class="b ${sb}">${t.status}</span>${t.reviewNote&&t.status==='Done'?`<div style="font-size:10px;color:var(--text3)">${t.reviewNote}</div>`:''}</td>
       <td>${act}</td>
     </tr>`;
   }).join('');
-  document.getElementById('t-tsk').innerHTML=`<thead><tr><th>Task</th><th>Assigned to</th><th>Phase</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows||er(7)}</tbody>`;
+  document.getElementById('t-tsk').innerHTML=`<thead><tr><th>Task</th><th>Assigned to</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows||er(6)}</tbody>`;
 }
-function openTsk(){document.getElementById('t-ds').value='';om('mo-tsk');}
+function openTsk(){
+  document.getElementById('t-ds').value='';
+  document.getElementById('tsk-modal-title').textContent='Assign Task';
+  document.getElementById('tsk-save-btn').onclick=saveTask;
+  document.getElementById('tsk-save-btn').textContent='Assign Task';
+  om('mo-tsk');
+}
 async function saveTask(){
   const desc=g('t-ds');if(!desc){alert('Enter description.');return;}
-  const assignee=g('t-wh'),phase=g('t-ph'),priority=g('t-pr'),deadline=g('t-dl');
+  const assignee=g('t-wh'),priority=g('t-pr'),deadline=g('t-dl'),deadlineTime=g('t-tm')||'23:59';
   const id=uid();
-  db.tasks[id]={id,desc,assignee,phase,priority,deadline,status:'Pending',createdAt:td(),by:cu.username};
+  db.tasks[id]={id,desc,assignee,priority,deadline,deadlineTime,status:'Pending',createdAt:dtNow(),by:cu.username};
   await fbSet('tasks',db.tasks);
   cm('mo-tsk'); renderAll();
   const targets=assignee==='all'?users():users().filter(u=>u.username===assignee);
   targets.forEach(u=>{
     pushNotif('New task: '+desc.slice(0,40),'Assigned by '+cu.fullName,u.username,'task');
-    sendMail(u,'New task assigned',`Hi ${u.fullName},\n\nYou have been assigned a new task:\n\n"${desc}"\n\nPhase: ${phase}\nPriority: ${priority}\nDeadline: ${deadline||'Not set'}\n\n— ${cu.fullName}`);
+    sendMail(u,'New task assigned',`Hi ${u.fullName},\n\nNew task assigned:\n\n"${desc}"\n\nPriority: ${priority}\nDeadline: ${fmtDt(deadline,deadlineTime)}\n\n— ${cu.fullName}`);
   });
   document.getElementById('pip-tasks').style.display='';
 }
 async function setTskSt(id,status){
   db.tasks[id].status=status;
   if(status==='Under Review'){
-    // notify leader and supervisor
     users().filter(u=>u.role==='leader'||u.role==='supervisor').forEach(u=>{
-      pushNotif('Task submitted for review',db.tasks[id].desc.slice(0,50)+' — submitted by '+un(db.tasks[id].assignee),u.username,'review');
-      sendMail(u,'Task ready for review',`Hi ${u.fullName},\n\n${un(db.tasks[id].assignee)} submitted a task for your review:\n\n"${db.tasks[id].desc}"\n\nPlease log in to approve or reject.\n\n— Capstone Hub`);
+      pushNotif('Task submitted for review',db.tasks[id].desc.slice(0,50)+' — by '+un(db.tasks[id].assignee),u.username,'review');
+      sendMail(u,'Task ready for review',`Hi ${u.fullName},\n\n${un(db.tasks[id].assignee)} submitted for review:\n\n"${db.tasks[id].desc}"\n\nDeadline: ${fmtDt(db.tasks[id].deadline,db.tasks[id].deadlineTime)}\n\n— Capstone Hub`);
     });
     document.getElementById('pip-tasks').style.display='';
   }
@@ -1162,16 +1423,62 @@ async function addPaper(){
 
 // ══ ANALYTICS ══════════════════════════════════════════════════════════
 function rAna(){
-  const T=tasks();
-  const done=T.filter(t=>t.status==='Done').length,prog=T.filter(t=>t.status==='In Progress').length,pend=T.filter(t=>t.status==='Pending').length;
-  mkC('c-status','doughnut',{labels:['Done','In Progress','Pending'],datasets:[{data:[done,prog,pend],backgroundColor:['rgba(0,217,126,.65)','rgba(255,171,0,.65)','rgba(61,104,128,.4)'],borderWidth:0,hoverOffset:5}]},{cutout:'58%',plugins:{legend:{position:'right',labels:{color:'#7BA3C0',font:{size:11,family:'Outfit'}}}},scales:{}});
+  const T=tasks(); const P=papers(); const M=meetings();
+  const done=T.filter(t=>t.status==='Done').length;
+  const prog=T.filter(t=>t.status==='In Progress').length;
+  const pend=T.filter(t=>t.status==='Pending').length;
+  const review=T.filter(t=>t.status==='Under Review').length;
+  const rejected=T.filter(t=>t.status==='Rejected').length;
+  const overdue=T.filter(t=>isOverdue(t)&&t.status!=='Done').length;
+
+  // 1. Task status doughnut — now includes Under Review + purple
+  mkC('c-status','doughnut',{
+    labels:['Done','In Progress','Under Review','Rejected','Pending'],
+    datasets:[{
+      data:[done,prog,review,rejected,pend],
+      backgroundColor:['rgba(0,217,126,.65)','rgba(255,171,0,.65)','rgba(155,109,255,.65)','rgba(255,74,110,.65)','rgba(61,104,128,.4)'],
+      borderWidth:0,hoverOffset:5
+    }]
+  },{cutout:'58%',plugins:{legend:{position:'right',labels:{color:'#7BA3C0',font:{size:11,family:'Outfit'}}}},scales:{}});
+
   const mems=users().filter(u=>u.role!=='supervisor');
-  mkC('c-att','bar',{labels:mems.map(u=>u.fullName.split(' ')[0]),datasets:[{label:'Attended',data:mems.map(u=>meetings().filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:mems.map(u=>uc(u.username)+'88'),borderRadius:5}]},{plugins:{legend:{display:false}}});
-  mkC('c-pap-mem','bar',{labels:mems.map(u=>u.fullName.split(' ')[0]),datasets:[{label:'Papers',data:mems.map(u=>papers().filter(p=>p.addedby===u.username).length),backgroundColor:'rgba(155,109,255,.55)',borderRadius:5}]},{plugins:{legend:{display:false}}});
-  mkC('c-tsk-mem','bar',{labels:mems.map(u=>u.fullName.split(' ')[0]),datasets:[{label:'Assigned',data:mems.map(u=>T.filter(t=>t.assignee===u.username||t.assignee==='all').length),backgroundColor:'rgba(46,159,223,.45)',borderRadius:4},{label:'Done',data:mems.map(u=>T.filter(t=>(t.assignee===u.username||t.assignee==='all')&&t.status==='Done').length),backgroundColor:'rgba(0,217,126,.55)',borderRadius:4}]},{plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11}}}}});
+
+  // 2. Attendance — attended (color) + missed (red)
+  mkC('c-att','bar',{
+    labels:mems.map(u=>u.fullName.split(' ')[0]),
+    datasets:[
+      {label:'Attended',data:mems.map(u=>M.filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:mems.map(u=>uc(u.username)+'99'),borderRadius:4},
+      {label:'Missed',data:mems.map(u=>M.length-M.filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:'rgba(255,74,110,.55)',borderRadius:4}
+    ]
+  },{plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11,family:'Outfit'}}}}});
+
+  // 3. Approved papers per member only (not all added)
+  mkC('c-pap-mem','bar',{
+    labels:mems.map(u=>u.fullName.split(' ')[0]),
+    datasets:[{
+      label:'Approved papers',
+      data:mems.map(u=>P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length),
+      backgroundColor:'rgba(155,109,255,.65)',borderRadius:5
+    }]
+  },{plugins:{legend:{display:false}}});
+
+  // 4. Tasks: assigned, done, overdue (red)
+  mkC('c-tsk-mem','bar',{
+    labels:mems.map(u=>u.fullName.split(' ')[0]),
+    datasets:[
+      {label:'Assigned',data:mems.map(u=>T.filter(t=>t.assignee===u.username||t.assignee==='all').length),backgroundColor:'rgba(46,159,223,.45)',borderRadius:4},
+      {label:'Done',data:mems.map(u=>T.filter(t=>(t.assignee===u.username||t.assignee==='all')&&t.status==='Done').length),backgroundColor:'rgba(0,217,126,.55)',borderRadius:4},
+      {label:'Overdue',data:mems.map(u=>T.filter(t=>(t.assignee===u.username||t.assignee==='all')&&isOverdue(t)).length),backgroundColor:'rgba(255,74,110,.65)',borderRadius:4}
+    ]
+  },{plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11,family:'Outfit'}}}}});
+
+  // 5. Weekly line
   const weeks=[],now=new Date();
   for(let i=5;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i*7);weeks.push(d.toISOString().slice(0,10));}
-  mkC('c-week','line',{labels:weeks.map(w=>w.slice(5)),datasets:[{label:'Tasks done',data:weeks.map((w,i)=>T.filter(t=>t.status==='Done'&&t.createdAt>=w&&t.createdAt<(weeks[i+1]||'9999')).length),borderColor:'var(--blue2)',backgroundColor:'rgba(46,159,223,.1)',fill:true,tension:.4,pointBackgroundColor:'var(--blue2)'}]},{plugins:{legend:{display:false}},elements:{point:{radius:4}}});
+  mkC('c-week','line',{
+    labels:weeks.map(w=>w.slice(5)),
+    datasets:[{label:'Tasks done',data:weeks.map((w,i)=>T.filter(t=>t.status==='Done'&&t.createdAt>=w&&t.createdAt<(weeks[i+1]||'9999')).length),borderColor:'var(--blue2)',backgroundColor:'rgba(46,159,223,.1)',fill:true,tension:.4,pointBackgroundColor:'var(--blue2)'}]
+  },{plugins:{legend:{display:false}},elements:{point:{radius:4}}});
 }
 
 // ══ NOTES ══════════════════════════════════════════════════════════════
@@ -1196,14 +1503,16 @@ async function addNote(){
   const title=g('n-ti'),body=g('n-bo'),forWho=g('n-fo');
   if(!title||!body){alert('Fill title and message.');return;}
   const id=uid();
-  db.notes[id]={id,title,body,for:forWho,by:cu.username,date:td()};
+  db.notes[id]={id,title,body,for:forWho,by:cu.username,date:dtNow()};
   await fbSet('notes',db.notes);
   document.getElementById('n-ti').value=''; document.getElementById('n-bo').value='';
   rNotes();
+  // notify + email every recipient
   const recipients=forWho==='all'?users():users().filter(u=>u.username===forWho);
   recipients.filter(u=>u.username!==cu.username).forEach(u=>{
     pushNotif('Note from '+cu.fullName+': '+title,body.slice(0,60),u.username,'note');
-    sendMail(u,'New note: '+title,`Hi ${u.fullName},\n\n${cu.fullName} posted a note for you:\n\n"${title}"\n\n${body}\n\n— Capstone Hub`);
+    sendMail(u,'New note: '+title,
+      `Hi ${u.fullName},\n\n${cu.fullName} posted a note for you:\n\n"${title}"\n\n${body}\n\nPosted: ${dtNow()}\n\n— Capstone Hub`);
   });
   document.getElementById('pip-notes').style.display='';
 }
