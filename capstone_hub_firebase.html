@@ -80,9 +80,23 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ni.on{color:var(--blue2);border-left-color:var(--blue2);background:rgba(46,159,223,.07);}
 .ni-ic{font-size:14px;width:17px;text-align:center;}
 .notif-pip{width:5px;height:5px;border-radius:50%;background:var(--red);position:absolute;right:12px;top:50%;transform:translateY(-50%);}
+.ni-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:10px;min-width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;}
+.online-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.online-green{background:var(--green);}
+.online-yellow{background:var(--amber);}
+/* TOAST */
+#toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;}
+.toast{background:rgba(0,217,126,.95);color:#04342C;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);animation:toastIn .3s ease;pointer-events:none;max-width:400px;text-align:center;}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .sb-out{padding:10px 10px 14px;}
 .out-btn{width:100%;padding:9px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:500;transition:.15s;}
 .out-btn:hover{background:rgba(255,74,110,.07);color:var(--red);border-color:rgba(255,74,110,.25);}
+/* PAGINATION */
+.pag{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:14px;}
+.pag-btn{padding:6px 14px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;transition:.15s;}
+.pag-btn:hover{border-color:var(--blue2);color:var(--blue2);}
+.pag-btn:disabled{opacity:.35;cursor:not-allowed;}
+.pag-info{font-size:12px;color:var(--text3);}
 
 .main{flex:1;overflow-x:hidden;}
 .topbar{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40;}
@@ -287,13 +301,14 @@ tr:hover td{background:rgba(46,159,223,.025);}
     <div class="sb-email" id="s-email">—</div>
   </div>
   <div class="sb-nav">
-    <div class="ni on" onclick="go('dashboard',this)"><span class="ni-ic">◈</span>Dashboard</div>
-    <div class="ni" onclick="go('members',this)"><span class="ni-ic">◉</span>Members</div>
-    <div class="ni" onclick="go('meetings',this)"><span class="ni-ic">◷</span>Meetings</div>
-    <div class="ni" onclick="go('tasks',this)"><span class="ni-ic">◻</span>Tasks<span class="notif-pip" id="pip-tasks" style="display:none"></span></div>
-    <div class="ni" onclick="go('papers',this)"><span class="ni-ic">◈</span>Papers</div>
-    <div class="ni" onclick="go('analytics',this)"><span class="ni-ic">◌</span>Analytics</div>
-    <div class="ni" onclick="go('notes',this)"><span class="ni-ic">◇</span>Notes<span class="notif-pip" id="pip-notes" style="display:none"></span></div>
+    <div class="ni on" onclick="go('dashboard',this)" id="nav-dashboard"><span class="ni-ic">◈</span>Dashboard</div>
+    <div class="ni" onclick="go('members',this)" id="nav-members"><span class="ni-ic">◉</span>Members</div>
+    <div class="ni" onclick="go('meetings',this)" id="nav-meetings"><span class="ni-ic">◷</span>Meetings<span class="ni-badge" id="badge-meetings" style="display:none">0</span></div>
+    <div class="ni" onclick="go('tasks',this)" id="nav-tasks"><span class="ni-ic">◻</span>Tasks<span class="ni-badge" id="badge-tasks" style="display:none">0</span></div>
+    <div class="ni" onclick="go('papers',this)" id="nav-papers"><span class="ni-ic">◈</span>Papers<span class="ni-badge" id="badge-papers" style="display:none">0</span></div>
+    <div class="ni" onclick="go('analytics',this)" id="nav-analytics"><span class="ni-ic">◌</span>Analytics</div>
+    <div class="ni" onclick="go('notes',this)" id="nav-notes"><span class="ni-ic">◇</span>Notes<span class="ni-badge" id="badge-notes" style="display:none">0</span></div>
+    <div class="ni" onclick="go('report',this)" id="nav-report"><span class="ni-ic">◑</span>Report<span class="ni-badge" id="badge-report" style="display:none">0</span></div>
     <div class="ni" id="ni-settings" onclick="go('settings',this)"><span class="ni-ic">⚙</span>Settings</div>
   </div>
   <div class="sb-out"><button class="out-btn" onclick="logout()">← Sign Out</button></div>
@@ -368,11 +383,12 @@ tr:hover td{background:rgba(46,159,223,.025);}
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="ct" style="margin-bottom:0">All papers — <span id="pc">0</span> / 100</div>
+        <div class="ct" style="margin-bottom:0">All papers — <span id="pc">0</span> collected | <span id="pc-approved" style="color:var(--purple)">0</span> approved / 100 goal</div>
         <button class="btn bs" onclick="downloadExcel()" style="font-size:12px;padding:6px 14px">⬇ Download Excel</button>
       </div>
       <div class="prog" style="margin-bottom:12px"><div class="pf" id="pp" style="width:0%"></div></div>
       <div class="tw"><table id="t-pap"></table></div>
+      <div id="pap-pagination"></div>
     </div>
   </div>
 
@@ -384,7 +400,7 @@ tr:hover td{background:rgba(46,159,223,.025);}
       <div class="chart-c"><div class="ct">Attendance per member</div><canvas id="c-att"></canvas></div>
     </div>
     <div class="g2" style="margin-bottom:14px">
-      <div class="chart-c"><div class="ct">Papers per member</div><canvas id="c-pap-mem"></canvas></div>
+      <div class="chart-c"><div class="ct">Approved papers per member</div><canvas id="c-pap-mem"></canvas></div>
       <div class="chart-c"><div class="ct">Tasks: assigned vs done</div><canvas id="c-tsk-mem"></canvas></div>
     </div>
     <div class="chart-c"><div class="ct">Weekly task completion</div><canvas id="c-week" style="max-height:140px"></canvas></div>
@@ -424,7 +440,17 @@ tr:hover td{background:rgba(46,159,223,.025);}
       </div>
     </div>
   </div>
+  <!-- REPORT PAGE -->
+  <div id="pg-report" class="page">
+    <div class="ph"><div><div class="pt">Report Links</div><div class="ps">Share document links with the team (Overleaf, Google Docs, etc.)</div></div>
+    <div id="report-add-btn"></div></div>
+    <div id="report-add-form"></div>
+    <div class="card"><div id="report-list"></div></div>
+  </div>
+
 </main>
+<!-- TOAST CONTAINER -->
+<div id="toast-wrap"></div>
 </div>
 </div>
 
@@ -488,6 +514,28 @@ tr:hover td{background:rgba(46,159,223,.025);}
 </div>
 </div>
 
+<!-- EDIT PAPER MODAL -->
+<div class="mo" id="mo-edit-paper">
+<div class="mdl" style="width:560px">
+  <div class="mt">Edit Paper</div>
+  <div class="fgrid">
+    <div class="fg"><label>Title</label><input id="ep-ti"></div>
+    <div class="fg"><label>Authors & Year</label><input id="ep-au"></div>
+    <div class="fg"><label>Journal</label><input id="ep-jo"></div>
+    <div class="fg"><label>Domain</label><input id="ep-do"></div>
+    <div class="fg"><label>Key finding</label><input id="ep-fi"></div>
+    <div class="fg"><label>Method</label><input id="ep-me"></div>
+    <div class="fg"><label>Relevance</label><select id="ep-re"><option>High</option><option>Medium</option><option>Low</option></select></div>
+    <div class="fg"><label>DOI link</label><input id="ep-li"></div>
+    <div class="fg full"><label>Notes</label><textarea id="ep-no"></textarea></div>
+  </div>
+  <div class="mf">
+    <button class="btn bd" onclick="cm('mo-edit-paper')">Cancel</button>
+    <button class="btn bp" onclick="saveEditPaper()">Save Changes</button>
+  </div>
+</div>
+</div>
+
 <!-- MEMBER PROFILE MODAL -->
 <div class="mo" id="mo-member">
 <div class="mdl" style="width:620px;max-width:96vw;max-height:92vh">
@@ -542,14 +590,19 @@ async function fbDel(path){
 }
 
 // ══ STATE ════════════════════════════════════════════════════════════════
-let db={users:{},meetings:{},tasks:{},papers:{},notes:{},notifs:{}};
+let db={users:{},meetings:{},tasks:{},papers:{},notes:{},notifs:{},reports:{}};
 let cu=null;
 let otp='';
 let reg={};
 let CHS={};
 let pollTimer=null;
 let lastData='';
+let papPage=0;
+let editPapId=null;
+let lastSeenKey='cap_lastseen';
 const PAL=['#2E9FDF','#00D97E','#FFAB00','#FF4A6E','#9B6DFF','#00C9B1','#FF7143','#E879A0'];
+// badge tracking
+let seenCounts={meetings:0,tasks:0,papers:0,notes:0,report:0};
 
 function uid(){return 'id'+Date.now()+Math.random().toString(36).slice(2,6);}
 function td(){return new Date().toISOString().slice(0,10);}
@@ -600,10 +653,11 @@ window.onload=async()=>{
     db.papers=data.papers||{};
     db.notes=data.notes||{};
     db.notifs=data.notifs||{};
+    db.reports=data.reports||{};
+    db.online=data.online||{};
     lastData=JSON.stringify(data);
   }
   hideLoading();
-  // show register if no users, else login
   show(Object.keys(db.users).length===0?'sc-reg':'sc-login');
 };
 
@@ -616,11 +670,15 @@ function hideLoading(){document.getElementById('loading-overlay').classList.add(
 // ══ POLLING ══════════════════════════════════════════════════════════════
 function startPolling(){
   document.getElementById('sync-dot').style.display='flex';
+  // update last seen every 30s
+  updateLastSeen();
+  setInterval(updateLastSeen,30000);
   pollTimer=setInterval(async()=>{
     const data=await fbGet('');
     if(!data) return;
     const h=JSON.stringify(data);
     if(h!==lastData){
+      const prev={m:Object.keys(db.meetings||{}).length,t:Object.keys(db.tasks||{}).length,p:Object.keys(db.papers||{}).length,n:Object.keys(db.notes||{}).length,r:Object.keys(db.reports||{}).length};
       lastData=h;
       db.users=data.users||{};
       db.meetings=data.meetings||{};
@@ -628,10 +686,71 @@ function startPolling(){
       db.papers=data.papers||{};
       db.notes=data.notes||{};
       db.notifs=data.notifs||{};
+      db.reports=data.reports||{};
+      db.online=data.online||{};
+      // detect new items and show toasts + badges
+      checkNewItems(prev);
       renderAll();
     }
   },5000);
 }
+
+async function updateLastSeen(){
+  if(!cu) return;
+  if(!db.online) db.online={};
+  db.online[cu.username]={ts:Date.now(),name:cu.fullName};
+  await fbSet('online/'+cu.username,{ts:Date.now(),name:cu.fullName});
+}
+
+function isOnline(username){
+  const rec=(db.online||{})[username];
+  if(!rec) return false;
+  return (Date.now()-rec.ts)<35000; // 35s threshold
+}
+
+function lastSeenText(username){
+  const rec=(db.online||{})[username];
+  if(!rec) return 'Never';
+  const diff=Date.now()-rec.ts;
+  if(diff<35000) return 'Online now';
+  const mins=Math.floor(diff/60000);
+  if(mins<60) return mins+'m ago';
+  const hrs=Math.floor(mins/60);
+  if(hrs<24) return hrs+'h ago';
+  return Math.floor(hrs/24)+'d ago';
+}
+
+function checkNewItems(prev){
+  const cur={m:Object.keys(db.meetings||{}).length,t:Object.keys(db.tasks||{}).length,p:Object.keys(db.papers||{}).length,n:Object.keys(db.notes||{}).length,r:Object.keys(db.reports||{}).length};
+  const active=document.querySelector('.ni.on')?.id?.replace('nav-','');
+  if(cur.m>prev.m&&active!=='meetings'){const n=cur.m-prev.m;showBadge('meetings',n);showToast(n+' new meeting'+(n>1?'s':'')+' recorded');}
+  if(cur.t>prev.t&&active!=='tasks'){const n=cur.t-prev.t;showBadge('tasks',n);showToast(n+' new task'+(n>1?'s':'')+' assigned');}
+  if(cur.p>prev.p&&active!=='papers'){const n=cur.p-prev.p;showBadge('papers',n);showToast(n+' new paper'+(n>1?'s':'')+' added');}
+  if(cur.n>prev.n&&active!=='notes'){const n=cur.n-prev.n;showBadge('notes',n);showToast(n+' new note'+(n>1?'s':'')+' posted');}
+  if(cur.r>prev.r&&active!=='report'){const n=cur.r-prev.r;showBadge('report',n);showToast(n+' new report link'+(n>1?'s':'')+' added');}
+}
+
+function showBadge(key,count){
+  const el=document.getElementById('badge-'+key);
+  if(!el) return;
+  const cur=parseInt(el.textContent)||0;
+  el.textContent=cur+count;
+  el.style.display='inline-flex';
+}
+
+function clearBadge(key){
+  const el=document.getElementById('badge-'+key);
+  if(el){el.textContent='0';el.style.display='none';}
+}
+
+function showToast(msg){
+  const wrap=document.getElementById('toast-wrap');
+  const t=document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  wrap.appendChild(t);
+  setTimeout(()=>t.remove(),10000);
+}
+
 function stopPolling(){
   clearInterval(pollTimer);
   document.getElementById('sync-dot').style.display='none';
@@ -712,6 +831,8 @@ async function login(){
     db.papers=data.papers||{};
     db.notes=data.notes||{};
     db.notifs=data.notifs||{};
+    db.reports=data.reports||{};
+    db.online=data.online||{};
   }
   btn.disabled=false; btn.textContent='Sign In →';
   const u=db.users[un2];
@@ -742,14 +863,15 @@ function logout(){
 function go(page,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
-  document.getElementById('pg-'+page).classList.add('on');
+  const pg=document.getElementById('pg-'+page);
+  if(pg) pg.classList.add('on');
   el.classList.add('on');
+  // clear badge for this page
+  clearBadge(page);
   rp(page);
-  if(page==='tasks') document.getElementById('pip-tasks').style.display='none';
-  if(page==='notes') document.getElementById('pip-notes').style.display='none';
 }
 
-function renderAll(){['dashboard','members','meetings','tasks','papers','notes'].forEach(rp);renderNotifs();}
+function renderAll(){['dashboard','members','meetings','tasks','papers','notes','report'].forEach(rp);renderNotifs();}
 function rp(p){
   if(p==='dashboard') rDash();
   if(p==='members') rMem();
@@ -758,6 +880,7 @@ function rp(p){
   if(p==='papers') rPap();
   if(p==='analytics') rAna();
   if(p==='notes') rNotes();
+  if(p==='report') rReport();
   if(p==='settings') loadEJSSettings();
 }
 
@@ -777,7 +900,7 @@ function rDash(){
   document.getElementById('d-stats').innerHTML=`
     <div class="stat sc"><div class="sl">Tasks</div><div class="sv" style="color:var(--blue2)">${T.length}</div><div class="ss">${done} done</div></div>
     <div class="stat sg"><div class="sl">Meetings</div><div class="sv" style="color:var(--green)">${meetings().length}</div><div class="ss">Recorded</div></div>
-    <div class="stat sa"><div class="sl">Papers</div><div class="sv" style="color:var(--amber)">${papers().length}</div><div class="ss">/ 100 target</div></div>
+    <div class="stat sa"><div class="sl">Papers</div><div class="sv" style="color:var(--amber)">${papers().filter(p=>p.reviewStatus==='Approved').length}</div><div class="ss">${papers().length} collected</div></div>
     <div class="stat sp"><div class="sl">Members</div><div class="sv" style="color:var(--purple)">${users().length}</div><div class="ss">Registered</div></div>`;
 
   // Group by priority instead of phase (phase removed from task model)
@@ -797,8 +920,10 @@ function rDash(){
     ]
   },{scales:{x:{stacked:false,ticks:{color:'#3D6880',font:{size:11,family:'Outfit'}},grid:{color:'rgba(46,159,223,0.05)'}},y:{ticks:{color:'#3D6880'},grid:{color:'rgba(46,159,223,0.05)'}}},plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11}}}}});
 
-  const pn=Math.min(100,papers().length);
-  mkC('c-papers','doughnut',{labels:['Collected','Remaining'],datasets:[{data:[pn,Math.max(0,100-pn)],backgroundColor:['rgba(0,217,126,.65)','rgba(46,159,223,.1)'],borderWidth:0}]},{cutout:'70%',plugins:{legend:{display:false}},scales:{}});
+  const papTotal=papers().length;
+  const papApprT=papers().filter(p=>p.reviewStatus==='Approved').length;
+  const pn=Math.min(100,papApprT);
+  mkC('c-papers','doughnut',{labels:['Approved','Remaining'],datasets:[{data:[pn,Math.max(0,100-pn)],backgroundColor:['rgba(155,109,255,.7)','rgba(46,159,223,.1)'],borderWidth:0}]},{cutout:'70%',plugins:{legend:{display:false}},scales:{}});
 
   const mems=users().filter(u=>u.role!=='supervisor');
   document.getElementById('d-mem').innerHTML=mems.map(u=>{
@@ -834,7 +959,13 @@ function rMem(){
     const mpApproved=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length;
     const att=M.filter(m=>m.attendance&&m.attendance[u.username]).length;
     return `<tr style="cursor:pointer" onclick="openMemberProfile('${u.username}')">
-      <td><div style="display:flex;align-items:center;gap:9px"><div class="av" style="width:30px;height:30px;font-size:11px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div><div><div style="font-weight:600">${u.fullName}</div><div style="font-size:11px;color:var(--text3)">@${u.username}</div></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:9px">
+        <div style="position:relative">
+          <div class="av" style="width:30px;height:30px;font-size:11px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div>
+          <span class="online-dot ${isOnline(u.username)?'online-green':'online-yellow'}" style="position:absolute;bottom:0;right:0;border:2px solid var(--bg2)"></span>
+        </div>
+        <div><div style="font-weight:600">${u.fullName}</div><div style="font-size:11px;color:var(--text3)">@${u.username} · <span style="color:${isOnline(u.username)?'var(--green)':'var(--text3)'}">${lastSeenText(u.username)}</span></div></div>
+      </div></td>
       <td style="font-size:12px;color:var(--text2)">${u.email}</td>
       <td><span class="b bT">${rl(u.role)}</span></td>
       <td>${md}/${mt.length}</td>
@@ -848,52 +979,64 @@ function rMem(){
 }
 
 function renderCompetition(){
-  const P=papers(); const allMems=users();
+  const P=papers();
+  // exclude supervisor from competition
+  const allMems=users().filter(u=>u.role!=='supervisor');
   const sorted=[...allMems].sort((a,b)=>P.filter(p=>p.addedby===b.username&&p.reviewStatus==='Approved').length - P.filter(p=>p.addedby===a.username&&p.reviewStatus==='Approved').length);
-  const total=P.filter(p=>p.reviewStatus==='Approved').length;
+  const totalApproved=P.filter(p=>p.reviewStatus==='Approved').length;
   const medals=['🥇','🥈','🥉'];
   const goal=100;
   let html=`<div style="margin-bottom:12px">
     <div style="font-size:12px;color:var(--text2);margin-bottom:6px">Approved papers towards 100 goal</div>
-    <div class="prog"><div class="pf" style="width:${Math.min(100,total)}%;background:var(--purple)"></div></div>
-    <div style="font-size:11px;color:var(--text3);margin-top:4px">${total}/100 papers approved</div>
+    <div class="prog"><div class="pf" style="width:${Math.min(100,totalApproved)}%;background:var(--purple)"></div></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:4px">${totalApproved}/100 approved papers</div>
   </div>`;
-  if(total>=goal){
+  if(totalApproved>=goal){
     html+=`<div style="background:linear-gradient(135deg,rgba(155,109,255,.2),rgba(0,201,177,.1));border:1px solid var(--purple);border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">
       <div style="font-size:24px;margin-bottom:6px">🎉</div>
-      <div style="font-size:16px;font-weight:700;color:var(--purple)">100 Papers Goal Reached!</div>
-      <div style="font-size:13px;color:var(--text2);margin-top:4px">Congratulations to the entire team — Project #37 literature survey is complete!</div>
+      <div style="font-size:16px;font-weight:700;color:var(--purple)">100 Approved Papers Goal Reached!</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px">Congratulations to the entire team — Project #37 literature survey complete!</div>
     </div>`;
   }
   html+=`<table style="width:100%;border-collapse:collapse">
     <thead><tr>
       <th style="text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Rank</th>
       <th style="text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Member</th>
-      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Approved Papers</th>
-      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Total Added</th>
-      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Share</th>
+      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Approved</th>
+      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Added</th>
+      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Milestones</th>
     </tr></thead><tbody>`;
   sorted.forEach((u,i)=>{
     const approved=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length;
-    const total2=P.filter(p=>p.addedby===u.username).length;
-    const share=total>0?Math.round(approved/total*100):0;
+    const added=P.filter(p=>p.addedby===u.username).length;
     const medal=medals[i]||'';
-    const isLeader=i===0&&approved>0;
-    html+=`<tr style="${isLeader?'background:rgba(155,109,255,.06)':''}">
+    const isTop=i===0&&approved>0;
+    const ms20added=added>=20?'<span style="font-size:11px" title="20 collected">📚</span>':'';
+    const ms20appr=approved>=20?'<span style="font-size:11px" title="20 approved">✅</span>':'';
+    html+=`<tr style="${isTop?'background:rgba(155,109,255,.06)':''}">
       <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-size:16px">${medal||'#'+(i+1)}</td>
       <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03)">
         <div style="display:flex;align-items:center;gap:8px">
-          <div class="av" style="width:24px;height:24px;font-size:9px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div>
-          <span style="font-size:13px;font-weight:${isLeader?'700':'500'}">${u.fullName}</span>
-          ${isLeader?'<span class="b bR" style="font-size:10px">Leader 👑</span>':''}
+          <div style="position:relative"><div class="av" style="width:24px;height:24px;font-size:9px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div><span class="online-dot ${isOnline(u.username)?'online-green':'online-yellow'}" style="position:absolute;bottom:-1px;right:-1px;border:1px solid var(--bg2)"></span></div>
+          <span style="font-size:13px;font-weight:${isTop?'700':'500'}">${u.fullName}</span>
+          ${isTop?'<span class="b bR" style="font-size:10px">Leader 👑</span>':''}
         </div>
       </td>
       <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-family:JetBrains Mono,monospace;font-size:14px;color:var(--purple);font-weight:600">${approved}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-size:13px;color:var(--text2)">${total2}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-size:12px;color:var(--text3)">${share}%</td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-size:13px;color:var(--text2)">${added}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-size:16px">${ms20added}${ms20appr}</td>
     </tr>`;
   });
   html+='</tbody></table>';
+  // congratulations banners
+  const congrats20=sorted.filter(u=>P.filter(p=>p.addedby===u.username).length>=20);
+  const congrats20appr=sorted.filter(u=>P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length>=20);
+  if(congrats20.length>0||congrats20appr.length>0){
+    html+='<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">';
+    congrats20.forEach(u=>{html+=`<div style="background:rgba(0,217,126,.08);border:1px solid rgba(0,217,126,.2);border-radius:9px;padding:10px 14px;font-size:13px">🎉 <b>${u.fullName}</b> reached <span style="color:var(--green)">20 papers collected!</span></div>`;});
+    congrats20appr.forEach(u=>{html+=`<div style="background:rgba(155,109,255,.08);border:1px solid rgba(155,109,255,.2);border-radius:9px;padding:10px 14px;font-size:13px">⭐ <b>${u.fullName}</b> reached <span style="color:var(--purple)">20 papers approved!</span></div>`;});
+    html+='</div>';
+  }
   document.getElementById('competition-board').innerHTML=html;
 }
 
@@ -1087,8 +1230,8 @@ async function saveExtend(){
 
 function rTsk(){
   document.getElementById('tsk-btn').innerHTML=canEdit()?`<button class="btn bp" onclick="openTsk()">+ Assign Task</button>`:'';
-  document.getElementById('t-wh').innerHTML=`<option value="all">All members</option>`+users().map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('');
-  const myT=canEdit()?tasks():tasks().filter(t=>t.assignee===cu.username||t.assignee==='all');
+  document.getElementById('t-wh').innerHTML=`<option value="all">All members</option>`+users().filter(u=>u.role!=='supervisor').map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('');
+  const myT=cu.role==='supervisor'?tasks():canEdit()?tasks():tasks().filter(t=>t.assignee===cu.username||t.assignee==='all');
   const rows=myT.map(t=>{
     const overdue=isOverdue(t);
     const sb=t.status==='Done'?'bD':t.status==='In Progress'?'bI':t.status==='Under Review'?'bR':t.status==='Rejected'?'bRej':'bP';
@@ -1109,8 +1252,12 @@ function rTsk(){
         <button class="btn bsm bd" onclick="delTsk('${t.id}')">✕</button>
       </div>`;
     } else if(t.assignee===cu.username||t.assignee==='all'){
-      if(t.status==='Pending'||t.status==='In Progress'){
-        act=`<button class="btn bsm bs" onclick="setTskSt('${t.id}','Under Review')">Submit for review</button>`;
+      if(overdue){
+        act=`<span style="font-size:11px;color:var(--red)">⚠ Overdue — contact leader to extend</span>`;
+      } else if(t.status==='Pending'||t.status==='In Progress'){
+        act=overdue
+          ? `<span style="font-size:11px;color:var(--red)">⚠ Overdue — contact leader to extend</span>`
+          : `<button class="btn bsm bs" onclick="setTskSt('${t.id}','Under Review')">Submit for review</button>`;
       } else if(t.status==='Under Review'){
         act=`<span style="font-size:11px;color:var(--purple)">⏳ Awaiting review</span>`;
       } else if(t.status==='Done'){
@@ -1149,7 +1296,7 @@ async function saveTask(){
     pushNotif('New task: '+desc.slice(0,40),'Assigned by '+cu.fullName,u.username,'task');
     sendMail(u,'New task assigned',`Hi ${u.fullName},\n\nNew task assigned:\n\n"${desc}"\n\nPriority: ${priority}\nDeadline: ${fmtDt(deadline,deadlineTime)}\n\n— ${cu.fullName}`);
   });
-  document.getElementById('pip-tasks').style.display='';
+  showBadge('tasks',1);
 }
 async function setTskSt(id,status){
   db.tasks[id].status=status;
@@ -1158,7 +1305,7 @@ async function setTskSt(id,status){
       pushNotif('Task submitted for review',db.tasks[id].desc.slice(0,50)+' — by '+un(db.tasks[id].assignee),u.username,'review');
       sendMail(u,'Task ready for review',`Hi ${u.fullName},\n\n${un(db.tasks[id].assignee)} submitted for review:\n\n"${db.tasks[id].desc}"\n\nDeadline: ${fmtDt(db.tasks[id].deadline,db.tasks[id].deadlineTime)}\n\n— Capstone Hub`);
     });
-    document.getElementById('pip-tasks').style.display='';
+    showBadge('tasks',1);
   }
   await fbSet('tasks',db.tasks);rTsk();rDash();
 }
@@ -1213,30 +1360,79 @@ async function submitReview(decision){
 }
 
 // ══ PAPERS ══════════════════════════════════════════════════════════════
+const PAP_PER_PAGE=10;
 function rPap(){
-  const n=papers().length;
+  const allP=papers();
+  const n=allP.length;
+  const approvedN=allP.filter(p=>p.reviewStatus==='Approved').length;
   document.getElementById('pc').textContent=n;
-  document.getElementById('pp').style.width=Math.min(100,n)+'%';
-  const rows=papers().map(p=>{
+  const pcApproved=document.getElementById('pc-approved');
+  if(pcApproved) pcApproved.textContent=approvedN;
+  document.getElementById('pp').style.width=Math.min(100,approvedN)+'%';
+  const totalPages=Math.max(1,Math.ceil(n/PAP_PER_PAGE));
+  if(papPage>=totalPages) papPage=totalPages-1;
+  const start=papPage*PAP_PER_PAGE;
+  const paginated=allP.slice(start,start+PAP_PER_PAGE);
+  const rows=paginated.map((p,pi)=>{
+    const globalIdx=start+pi+1;
     const rb=p.relevance==='High'?'bM':p.relevance==='Medium'?'bMo':'bm';
     const nc=(p.paperNotes||[]).length;
     const nb=nc>0?`<span class="b bB" style="margin-left:5px">${nc} note${nc>1?'s':''}</span>`:'';
-    const rs=p.reviewStatus==='Approved'?'<span class="b bD">Approved</span>':p.reviewStatus==='Rejected'?'<span class="b bRej">Rejected</span>':'<span class="b bP">Pending review</span>';
-    const reviewBtn=canEdit()&&!p.reviewStatus?`<span onclick="event.stopPropagation();openReview('paper','${p.id}')" class="b bR" style="cursor:pointer;margin-left:6px">Review ▸</span>`:'';
+    const rs=p.reviewStatus==='Approved'?'<span class="b bD">Approved</span>':p.reviewStatus==='Rejected'?'<span class="b bRej">Rejected</span>':'<span class="b bP">Pending</span>';
+    const reviewBtn=canEdit()&&!p.reviewStatus?`<span onclick="event.stopPropagation();openReview('paper','${p.id}')" class="b bR" style="cursor:pointer;margin-left:4px">Review ▸</span>`:'';
+    const canEditPaper=canEdit()||p.addedby===cu.username;
+    const editBtn=canEditPaper?`<button class="btn bsm bo" onclick="event.stopPropagation();openEditPaper('${p.id}')" style="margin-left:3px">Edit</button>`:'';
+    const delBtn=canEditPaper?`<button class="btn bsm bd" onclick="event.stopPropagation();delPaperFull('${p.id}')" style="margin-left:3px">x</button>`:'';
     return `<tr style="cursor:pointer" onclick="openPaper('${p.id}')">
+      <td style="color:var(--text3);font-size:11px;width:28px">${globalIdx}</td>
       <td style="font-weight:600;font-size:13px">${p.title}${nb}</td>
-      <td style="font-size:11px;color:var(--text2)">${p.authors||'—'}</td>
-      <td style="font-size:11px">${p.journal||'—'}</td>
-      <td style="font-size:11px;color:var(--text2)">${p.domain||'—'}</td>
-      <td style="font-size:11px;color:var(--text2);max-width:130px">${p.finding||'—'}</td>
-      <td style="font-size:11px">${p.method||'—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${p.authors||'-'}</td>
+      <td style="font-size:11px">${p.journal||'-'}</td>
+      <td style="font-size:11px;color:var(--text2)">${p.domain||'-'}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:120px">${p.finding||'-'}</td>
+      <td style="font-size:11px">${p.method||'-'}</td>
       <td><span class="b ${rb}">${p.relevance}</span></td>
       <td><div style="display:flex;align-items:center;gap:5px"><div class="av" style="width:18px;height:18px;font-size:8px;background:${uc(p.addedby)}22;color:${uc(p.addedby)}">${ini(un(p.addedby))}</div><span style="font-size:11px">${un(p.addedby)}</span></div></td>
       <td style="font-size:10px;color:var(--text3)">${p.date}</td>
-      <td>${rs}${reviewBtn}</td>
+      <td style="white-space:nowrap">${rs}${reviewBtn}${editBtn}${delBtn}</td>
     </tr>`;
   }).join('');
-  document.getElementById('t-pap').innerHTML=`<thead><tr><th>Title</th><th>Authors</th><th>Journal</th><th>Domain</th><th>Finding</th><th>Method</th><th>Rel.</th><th>By</th><th>Date</th><th>Review</th></tr></thead><tbody>${rows||er(10)}</tbody>`;
+  document.getElementById('t-pap').innerHTML=`<thead><tr><th>#</th><th>Title</th><th>Authors</th><th>Journal</th><th>Domain</th><th>Finding</th><th>Method</th><th>Rel.</th><th>By</th><th>Date</th><th>Review</th></tr></thead><tbody>${rows||er(11)}</tbody>`;
+  document.getElementById('pap-pagination').innerHTML=`<div class="pag">
+    <button class="pag-btn" onclick="setPapPage(0)" ${pagPage===0?'disabled':''}>first</button>
+    <button class="pag-btn" onclick="setPapPage(${papPage-1})" ${papPage===0?'disabled':''}>prev</button>
+    <span class="pag-info">Page ${papPage+1} of ${totalPages} | ${n} papers | ${approvedN} approved</span>
+    <button class="pag-btn" onclick="setPapPage(${papPage+1})" ${papPage>=totalPages-1?'disabled':''}>next</button>
+    <button class="pag-btn" onclick="setPapPage(${totalPages-1})" ${pagPage>=totalPages-1?'disabled':''}>last</button>
+  </div>`.replace(/pagPage/g,'papPage');
+}
+function setPapPage(n){papPage=n;rPap();}
+function openEditPaper(pid){
+  editPapId=pid;
+  const p=db.papers[pid];
+  document.getElementById('ep-ti').value=p.title||'';
+  document.getElementById('ep-au').value=p.authors||'';
+  document.getElementById('ep-jo').value=p.journal||'';
+  document.getElementById('ep-do').value=p.domain||'';
+  document.getElementById('ep-fi').value=p.finding||'';
+  document.getElementById('ep-me').value=p.method||'';
+  document.getElementById('ep-re').value=p.relevance||'High';
+  document.getElementById('ep-li').value=p.link||'';
+  document.getElementById('ep-no').value=p.notes||'';
+  om('mo-edit-paper');
+}
+async function saveEditPaper(){
+  if(!editPapId) return;
+  const p=db.papers[editPapId];
+  const newTitle=document.getElementById('ep-ti').value.trim();
+  if(!newTitle){alert('Title cannot be empty.');return;}
+  if(newTitle.toLowerCase()!==p.title.toLowerCase()){
+    const dup=papers().find(x=>x.id!==editPapId&&x.title.trim().toLowerCase()===newTitle.toLowerCase());
+    if(dup){alert('Title already used by '+un(dup.addedby)+'.');return;}
+  }
+  db.papers[editPapId]={...p,title:newTitle,authors:document.getElementById('ep-au').value,journal:document.getElementById('ep-jo').value,domain:document.getElementById('ep-do').value,finding:document.getElementById('ep-fi').value,method:document.getElementById('ep-me').value,relevance:document.getElementById('ep-re').value,link:document.getElementById('ep-li').value,notes:document.getElementById('ep-no').value};
+  await fbSet('papers',db.papers);
+  cm('mo-edit-paper');rPap();
 }
 
 function openPaper(pid){
@@ -1514,7 +1710,7 @@ async function addNote(){
     sendMail(u,'New note: '+title,
       `Hi ${u.fullName},\n\n${cu.fullName} posted a note for you:\n\n"${title}"\n\n${body}\n\nPosted: ${dtNow()}\n\n— Capstone Hub`);
   });
-  document.getElementById('pip-notes').style.display='';
+  showBadge('notes',1);
 }
 
 async function delNote(id){if(!confirm('Delete note?'))return;delete db.notes[id];await fbSet('notes',db.notes);rNotes();}
@@ -1542,7 +1738,29 @@ function renderNotifs(){
   const unread=mine.filter(n=>!n.read).length;
   const nc=document.getElementById('nc');
   if(unread>0){nc.textContent=unread;nc.style.display='inline-flex';}else nc.style.display='none';
-  document.getElementById('nl').innerHTML=mine.length===0?'<div style="color:var(--text3);text-align:center;padding:16px;font-size:13px">All caught up ✓</div>':mine.slice(0,8).map(n=>`<div class="ndi ${n.read?'':'unread'}"><div class="ndi-t">${n.title}</div><div class="ndi-s">${n.msg.slice(0,55)}${n.msg.length>55?'...':''}</div><div style="font-size:10px;color:var(--text3);margin-top:2px">${n.date}</div></div>`).join('');
+  const items=mine.slice(0,20).map(n=>`
+    <div class="ndi ${n.read?'':'unread'}" style="position:relative">
+      <div class="ndi-t">${n.title}</div>
+      <div class="ndi-s">${n.msg.slice(0,55)}${n.msg.length>55?'...':''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+        <span style="font-size:10px;color:var(--text3)">${n.date}</span>
+        <button onclick="delNotif('${n.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0">✕</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('nl').innerHTML=mine.length===0
+    ?'<div style="color:var(--text3);text-align:center;padding:16px;font-size:13px">All caught up ✓</div>'
+    :`${items}<div style="text-align:center;margin-top:8px"><button onclick="delAllNotifs()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:7px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Outfit,sans-serif">Clear all</button></div>`;
+}
+
+async function delNotif(nid){
+  if(db.notifs?.[cu.username]?.[nid]) delete db.notifs[cu.username][nid];
+  await fbSet('notifs/'+cu.username,db.notifs[cu.username]||{});
+  renderNotifs();
+}
+async function delAllNotifs(){
+  db.notifs[cu.username]={};
+  await fbSet('notifs/'+cu.username,{});
+  renderNotifs();
 }
 
 async function toggleND(){
@@ -1554,6 +1772,71 @@ async function toggleND(){
   }
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.notif-area'))document.getElementById('ndrop').classList.remove('open');});
+
+// ══ REPORT PAGE ══════════════════════════════════════════════════════════
+function rReport(){
+  const addBtn=document.getElementById('report-add-btn');
+  const addForm=document.getElementById('report-add-form');
+  if(canEdit()){
+    addBtn.innerHTML=`<button class="btn bp" onclick="toggleReportForm()">+ Add Link</button>`;
+    addForm.innerHTML=`<div class="card" id="report-form-card" style="display:none;margin-bottom:14px">
+      <div class="ct">Add report link</div>
+      <div class="fgrid">
+        <div class="fg"><label>Task / Section name</label><input id="rl-name" placeholder="e.g. Literature Review — Capstone I"></div>
+        <div class="fg"><label>Type</label><select id="rl-type"><option>Overleaf</option><option>Google Docs</option><option>GitHub</option><option>Google Drive</option><option>Other</option></select></div>
+        <div class="fg full"><label>Link URL</label><input id="rl-url" placeholder="https://overleaf.com/project/..."></div>
+        <div class="fg full"><label>Notes (optional)</label><input id="rl-note" placeholder="Short description"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn bp" onclick="addReportLink()">Save Link</button>
+        <button class="btn bo" onclick="toggleReportForm()">Cancel</button>
+      </div>
+    </div>`;
+  } else { addBtn.innerHTML=''; addForm.innerHTML=''; }
+
+  const links=Object.values(db.reports||{}).sort((a,b)=>a.date<b.date?1:-1);
+  const icons={'Overleaf':'📄','Google Docs':'📝','GitHub':'💻','Google Drive':'☁','Other':'🔗'};
+  document.getElementById('report-list').innerHTML=links.length===0
+    ?'<div style="color:var(--text3);text-align:center;padding:24px;font-size:13px">No report links added yet.</div>'
+    :links.map(l=>`
+      <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:24px;flex-shrink:0">${icons[l.type]||'🔗'}</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px">${l.name}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:1px">${l.type} · Added by ${un(l.by)} · ${l.date}</div>
+          ${l.note?`<div style="font-size:12px;color:var(--text2);margin-top:3px">${l.note}</div>`:''}
+          <a href="${l.url}" target="_blank" style="color:var(--blue2);font-size:13px;font-weight:500;display:inline-block;margin-top:6px">↗ Open ${l.type}</a>
+        </div>
+        ${canEdit()?`<button class="btn bsm bd" onclick="delReportLink('${l.id}')">Delete</button>`:''}
+      </div>`).join('');
+}
+
+function toggleReportForm(){
+  const fc=document.getElementById('report-form-card');
+  if(fc) fc.style.display=fc.style.display==='none'?'block':'none';
+}
+
+async function addReportLink(){
+  const name=g('rl-name'),url=g('rl-url'),type=g('rl-type'),note=g('rl-note');
+  if(!name||!url){alert('Enter name and URL.');return;}
+  const id=uid();
+  if(!db.reports) db.reports={};
+  db.reports[id]={id,name,url,type,note,by:cu.username,date:dtNow()};
+  await fbSet('reports',db.reports);
+  // notify team
+  users().filter(u=>u.username!==cu.username).forEach(u=>{
+    pushNotif('New report link: '+name,type+' link added by '+cu.fullName,u.username,'report');
+    sendMail(u,'New report link: '+name,`Hi ${u.fullName},\n\n${cu.fullName} added a report link:\n\n${name}\n${type}: ${url}\n${note?'Note: '+note:''}\n\n— Capstone Hub`);
+  });
+  toggleReportForm(); rReport();
+}
+
+async function delReportLink(id){
+  if(!confirm('Delete this link?'))return;
+  delete db.reports[id];
+  await fbSet('reports',db.reports);
+  rReport();
+}
 
 // ══ EMAILJS ══════════════════════════════════════════════════════════════
 function initEJS(){
@@ -1589,6 +1872,70 @@ function loadEJSSettings(){
   document.getElementById('ejs-sv').value=localStorage.getItem('ejs_sv')||'';
   document.getElementById('ejs-tm').value=localStorage.getItem('ejs_tm')||'';
   document.getElementById('ejs-current').textContent=ejsReady()?'🟢 Active — emails enabled':'⚪ Not configured';
+}
+
+
+// ══ REPORT PAGE ══════════════════════════════════════════════════════════
+function rReport(){
+  const canAdd=canEdit();
+  document.getElementById('report-add-btn').innerHTML=canAdd?`<button class="btn bp" onclick="openAddReport()">+ Add Link</button>`:'';
+  document.getElementById('report-add-form').innerHTML='';
+  const reps=Object.values(db.reports||{}).sort((a,b)=>a.date<b.date?1:-1);
+  document.getElementById('report-list').innerHTML=reps.length===0?
+    '<div style="color:var(--text3);text-align:center;padding:24px;font-size:13px">No report links yet.</div>':
+    reps.map(r=>`
+    <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:14px">${r.label}</div>
+          <div style="margin-top:4px"><a href="${r.url}" target="_blank" style="color:var(--blue2);font-size:13px;word-break:break-all">${r.url}</a></div>
+          ${r.desc?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${r.desc}</div>`:''}
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Added by ${un(r.by)} · ${r.date}</div>
+        </div>
+        ${canEdit()||r.by===cu.username?`<button class="btn bsm bd" onclick="delReport('${r.id}')">Delete</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+let addingReport=false;
+function openAddReport(){
+  if(addingReport) return;
+  addingReport=true;
+  document.getElementById('report-add-form').innerHTML=`
+    <div class="card" style="margin-bottom:14px">
+      <div class="ct">Add report link</div>
+      <div class="fgrid">
+        <div class="fg"><label>Label / Task name</label><input id="rl-label" placeholder="e.g. Literature Review — Overleaf"></div>
+        <div class="fg"><label>URL</label><input id="rl-url" placeholder="https://overleaf.com/..."></div>
+        <div class="fg full"><label>Description (optional)</label><input id="rl-desc" placeholder="What this document contains"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn bp" onclick="saveReport()">Add Link</button>
+        <button class="btn bo" onclick="cancelReport()">Cancel</button>
+      </div>
+    </div>`;
+}
+function cancelReport(){addingReport=false;document.getElementById('report-add-form').innerHTML='';}
+async function saveReport(){
+  const label=document.getElementById('rl-label')?.value?.trim();
+  const url=document.getElementById('rl-url')?.value?.trim();
+  if(!label||!url){alert('Fill label and URL.');return;}
+  const id=uid();
+  if(!db.reports) db.reports={};
+  db.reports[id]={id,label,url,desc:document.getElementById('rl-desc')?.value?.trim()||'',by:cu.username,date:dtNow()};
+  await fbSet('reports',db.reports);
+  addingReport=false;
+  rReport();
+  users().filter(u=>u.username!==cu.username).forEach(u=>{
+    pushNotif('New report link: '+label,url.slice(0,50),u.username,'report');
+    sendMail(u,'New report link: '+label,`Hi ${u.fullName},\n\n${cu.fullName} shared a report link:\n\n${label}\n${url}\n\n— Capstone Hub`);
+  });
+}
+async function delReport(id){
+  if(!confirm('Delete this link?')) return;
+  delete db.reports[id];
+  await fbSet('reports',db.reports);
+  rReport();
 }
 
 // close modals on overlay click
