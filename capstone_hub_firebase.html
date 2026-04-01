@@ -16,9 +16,20 @@
   --text:#DCF0FF;--text2:#7BA3C0;--text3:#3D6880;
   --border:rgba(46,159,223,.12);--border2:rgba(46,159,223,.25);
   --glow:0 0 30px rgba(29,111,164,.12);
+  --sb-w:220px;
 }
+/* ── LIGHT THEME ───────────────────────────────────── */
+body.light{
+  --bg:#F0F4F8;--bg2:#FFFFFF;--bg3:#E8EEF4;--bg4:#D8E4EE;
+  --blue:#1560A0;--blue2:#1A80C4;--teal:#009E8C;
+  --green:#00A86B;--amber:#D08000;--red:#D63450;--purple:#7044DD;
+  --text:#0A1E30;--text2:#3A6080;--text3:#7097B0;
+  --border:rgba(26,128,196,.14);--border2:rgba(26,128,196,.28);
+  --glow:0 0 30px rgba(26,128,196,.08);
+}
+body.light::before{background:radial-gradient(ellipse at 20% 20%,rgba(26,128,196,.05) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(0,158,140,.04) 0%,transparent 60%);}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;min-height:100vh;transition:background .25s,color .25s;}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(29,111,164,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(0,201,177,.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
 
 .screen{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;}
@@ -98,10 +109,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pag-btn:disabled{opacity:.35;cursor:not-allowed;}
 .pag-info{font-size:12px;color:var(--text3);}
 
-.main{flex:1;overflow-x:hidden;}
-.topbar{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40;}
-.topbar-left{font-size:13px;color:var(--text2);}
+.sb{width:var(--sb-w);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:80;transition:transform .25s ease;}
+.sb.collapsed{transform:translateX(calc(-1 * var(--sb-w)));}
+/* mobile overlay */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:75;}
+.sb-overlay.open{display:block;}
+.main{flex:1;margin-left:var(--sb-w);transition:margin-left .25s;overflow-x:hidden;}
+.main.full{margin-left:0;}
+.topbar{padding:11px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40;gap:10px;}
+.topbar-left{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:10px;}
 .topbar-left span{color:var(--teal);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.tb-icon-btn{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);cursor:pointer;font-size:15px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:.15s;}
+.tb-icon-btn:hover{border-color:var(--blue2);color:var(--text);}
 .notif-area{position:relative;}
 .nb{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:8px;background:var(--bg2);border:1px solid var(--border2);font-size:13px;color:var(--text2);cursor:pointer;transition:.15s;}
 .nb:hover{border-color:var(--blue2);color:var(--text);}
@@ -113,7 +133,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ndi-t{font-size:13px;font-weight:500;}
 .ndi-s{font-size:11px;color:var(--text3);margin-top:2px;}
 
-.page{display:none;padding:24px 28px;max-width:1080px;}
+.page{display:none;padding:20px 24px;max-width:1100px;}
 .page.on{display:block;}
 .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
 .pt{font-size:20px;font-weight:800;letter-spacing:-.02em;}
@@ -185,7 +205,51 @@ tr:hover td{background:rgba(46,159,223,.025);}
 .tl{display:flex;flex-direction:column;gap:9px;}
 .tl-i{display:flex;gap:9px;align-items:flex-start;}
 .tl-d{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0;}
-::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+/* ── RESPONSIVE ─────────────────────────────────────── */
+@media(max-width:768px){
+  :root{--sb-w:240px;}
+  .sb{transform:translateX(calc(-1 * var(--sb-w)));}
+  .sb.open{transform:translateX(0);}
+  .main{margin-left:0!important;}
+  .g4{grid-template-columns:repeat(2,1fr)!important;}
+  .g2{grid-template-columns:1fr!important;}
+  .fgrid{grid-template-columns:1fr!important;}
+  .fl2{grid-template-columns:1fr!important;}
+  .page{padding:14px 12px;}
+  .topbar{padding:10px 14px;}
+  .mdl{padding:18px 14px;}
+}
+@media(min-width:769px) and (max-width:1100px){
+  :root{--sb-w:190px;}
+  .page{padding:16px 18px;}
+  .g4{grid-template-columns:repeat(2,1fr);}
+}
+@media(min-width:1101px){
+  :root{--sb-w:220px;}
+  .page{padding:20px 28px;}
+}
+/* ── SIMULATION PAGE ─────────────────────────────────── */
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:768px){.sim-grid{grid-template-columns:1fr;}}
+.sim-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;}
+.sim-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;}
+.sensor-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:9px;background:var(--bg3);margin-bottom:8px;}
+.sensor-label{font-size:12px;color:var(--text2);}
+.sensor-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+.sp-safe{background:rgba(0,217,126,.12);color:var(--green);border:1px solid rgba(0,217,126,.25);}
+.sp-warn{background:rgba(255,171,0,.12);color:var(--amber);border:1px solid rgba(255,171,0,.25);}
+.sp-danger{background:rgba(255,74,110,.12);color:var(--red);border:1px solid rgba(255,74,110,.25);}
+.chat-area{background:var(--bg3);border-radius:10px;padding:12px;min-height:130px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:180px;}
+.chat-msg{padding:8px 12px;border-radius:9px;font-size:12px;line-height:1.5;max-width:90%;}
+.chat-ai{background:rgba(46,159,223,.1);border:1px solid var(--border2);color:var(--text);align-self:flex-start;}
+.chat-student{background:rgba(0,201,177,.1);border:1px solid rgba(0,201,177,.2);color:var(--text);align-self:flex-end;}
+.sim-board{background:#2a3540;border-radius:10px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8dd;line-height:1.9;min-height:100px;}
+.bench-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.bench-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.bench-num{font-size:11px;color:var(--text3);margin-bottom:6px;}
+.bench-status{font-size:18px;margin-bottom:4px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
 </style>
 </head>
 <body>
@@ -287,10 +351,12 @@ tr:hover td{background:rgba(46,159,223,.025);}
 </div>
 </div>
 
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
 <!-- APP -->
 <div id="app">
-<div class="shell">
-<nav class="sb">
+<nav class="sb" id="sidebar">
   <div class="sb-top">
     <div class="sb-logo">Capstone Hub</div>
     <div class="sb-title">AI Lab<br>Companion</div>
@@ -309,18 +375,25 @@ tr:hover td{background:rgba(46,159,223,.025);}
     <div class="ni" onclick="go('analytics',this)" id="nav-analytics"><span class="ni-ic">◌</span>Analytics</div>
     <div class="ni" onclick="go('notes',this)" id="nav-notes"><span class="ni-ic">◇</span>Notes<span class="ni-badge" id="badge-notes" style="display:none">0</span></div>
     <div class="ni" onclick="go('report',this)" id="nav-report"><span class="ni-ic">◑</span>Report<span class="ni-badge" id="badge-report" style="display:none">0</span></div>
+    <div class="ni" onclick="go('simulation',this)" id="nav-simulation"><span class="ni-ic">⚡</span>Simulation</div>
     <div class="ni" id="ni-settings" onclick="go('settings',this)"><span class="ni-ic">⚙</span>Settings</div>
   </div>
   <div class="sb-out"><button class="out-btn" onclick="logout()">← Sign Out</button></div>
 </nav>
 <main class="main">
   <div class="topbar">
-    <div class="topbar-left">Project <span>#37</span> — <span>AI Lab Companion</span></div>
-    <div class="notif-area">
-      <div class="nb" onclick="toggleND()">🔔 <span id="nc-txt">Notifications</span><span class="nc" id="nc" style="display:none">0</span></div>
-      <div class="ndrop" id="ndrop">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;padding:0 3px">NOTIFICATIONS</div>
-        <div id="nl"></div>
+    <div class="topbar-left">
+      <button class="tb-icon-btn" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+      <span>Project <span>#37</span> — <span>AI Lab Companion</span></span>
+    </div>
+    <div class="topbar-right">
+      <button class="tb-icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      <div class="notif-area">
+        <div class="nb" onclick="toggleND()">🔔 <span id="nc-txt">Notifications</span><span class="nc" id="nc" style="display:none">0</span></div>
+        <div class="ndrop" id="ndrop">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;padding:0 3px">NOTIFICATIONS</div>
+          <div id="nl"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -448,10 +521,113 @@ tr:hover td{background:rgba(46,159,223,.025);}
     <div class="card"><div id="report-list"></div></div>
   </div>
 
+  <!-- SIMULATION PAGE -->
+  <div id="pg-simulation" class="page">
+    <div class="ph"><div><div class="pt">Project Simulation</div><div class="ps">Live demo of the AI Lab Companion system</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="sim-status" class="status-pill sp-safe">● SAFE</span>
+        <button class="btn bp" onclick="simTriggerFault()" id="sim-fault-btn">Simulate Fault</button>
+        <button class="btn bo" onclick="simReset()">Reset</button>
+      </div>
+    </div>
+
+    <!-- SENSOR READINGS -->
+    <div class="sim-grid">
+      <div class="sim-card">
+        <div class="sim-title">🔌 Sensor Hub — Real-time Readings</div>
+        <div class="sensor-row"><span class="sensor-label">CH1 · 5V Rail — Voltage</span><span class="sensor-val" id="sv1" style="color:var(--green)">4.97 V</span></div>
+        <div class="sensor-row"><span class="sensor-label">CH1 · 5V Rail — Current</span><span class="sensor-val" id="si1" style="color:var(--blue2)">10.2 mA</span></div>
+        <div class="sensor-row"><span class="sensor-label">CH2 · High Power — Current</span><span class="sensor-val" id="si2" style="color:var(--blue2)">0.0 mA</span></div>
+        <div class="sensor-row"><span class="sensor-label">🌡 Temperature — LM7805</span><span class="sensor-val" id="st1" style="color:var(--amber)">42.3 °C</span></div>
+        <div class="sensor-row"><span class="sensor-label">📷 Vision — Status</span><span class="sensor-val" id="sv-cam" style="color:var(--green);font-size:12px">CLEAR</span></div>
+        <div style="margin-top:12px;font-size:11px;color:var(--text3)">Readings update every second · STM32 firmware · INA226 x4</div>
+      </div>
+
+      <div class="sim-card">
+        <div class="sim-title">🤖 AI Assistant — LLM Interface</div>
+        <div class="chat-area" id="sim-chat">
+          <div class="chat-ai">👋 Hello! I'm monitoring your breadboard circuit. Everything looks normal. Ask me anything about your components.</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <select id="sim-q" style="flex:1;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:12px">
+            <option>Is my current too high for this LED?</option>
+            <option>What does this warning mean?</option>
+            <option>My circuit is not working, help me debug</option>
+            <option>Is 42°C safe for the LM7805?</option>
+            <option>What is the maximum current for a NE555?</option>
+          </select>
+          <button class="btn bp" onclick="simAsk()">Ask →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSTRUCTOR + STUDENT VIEWS -->
+    <div class="sim-grid">
+      <div class="sim-card">
+        <div class="sim-title">👨‍🏫 Instructor Dashboard — All Benches</div>
+        <div class="bench-grid" id="bench-grid"></div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text2)">Click any bench to simulate override</div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn bsm bp" onclick="simCutAll()">Cut All Power</button>
+          <button class="btn bsm bs" onclick="simRestoreAll()">Restore All</button>
+        </div>
+      </div>
+
+      <div class="sim-card">
+        <div class="sim-title">👩‍🎓 Student View — Bench 01</div>
+        <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:12px;font-weight:600">My Circuit Status</span>
+            <span class="status-pill" id="student-status-pill" style="background:rgba(0,217,126,.1);color:var(--green);border:1px solid rgba(0,217,126,.2)">✅ Safe</span>
+          </div>
+          <div class="sensor-row" style="margin:0 0 6px"><span class="sensor-label" style="font-size:11px">Voltage</span><span class="sensor-val" id="stud-v" style="font-size:14px;color:var(--green)">4.97 V</span></div>
+          <div class="sensor-row"><span class="sensor-label" style="font-size:11px">Current</span><span class="sensor-val" id="stud-i" style="font-size:14px;color:var(--blue2)">10.2 mA</span></div>
+        </div>
+        <div class="sim-board" id="sim-log">
+          <div>> [BOOT] STM32 firmware v2.1 — relay CLOSED</div>
+          <div>> [SENSOR] INA226 calibrated @ 100 sps</div>
+          <div>> [VISION] YOLOv8 model loaded — camera active</div>
+          <div>> [LLM] RAG pipeline ready — 3 datasheets loaded</div>
+          <div>> [STATUS] All systems nominal ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAFETY CHAIN VISUALIZER -->
+    <div class="sim-card" style="margin-bottom:16px">
+      <div class="sim-title">🛡 Safety Chain — Layer Status</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" id="safety-layers">
+        <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(0,217,126,.25)">
+          <div style="font-size:20px;margin-bottom:6px">📊</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:3px">Layer 1</div>
+          <div style="font-size:11px;color:var(--text3)">Anomaly Model</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--green)">● Active</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(0,217,126,.25)">
+          <div style="font-size:20px;margin-bottom:6px">⚡</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:3px">Layer 2</div>
+          <div style="font-size:11px;color:var(--text3)">Software Relay</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--green)" id="l2-status">● Closed</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(0,217,126,.25)">
+          <div style="font-size:20px;margin-bottom:6px">🔧</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:3px">Layer 3</div>
+          <div style="font-size:11px;color:var(--text3)">STM32 Hard Limit</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--green)">● Armed</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(0,217,126,.25)">
+          <div style="font-size:20px;margin-bottom:6px">🔩</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:3px">Layer 4</div>
+          <div style="font-size:11px;color:var(--text3)">Hardware Fuse</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--green)">● Intact</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </main>
 <!-- TOAST CONTAINER -->
 <div id="toast-wrap"></div>
-</div>
 </div>
 
 <!-- MODALS -->
@@ -657,6 +833,14 @@ window.onload=async()=>{
     db.online=data.online||{};
     lastData=JSON.stringify(data);
   }
+  // Restore session if user was previously logged in
+  const savedUser=sessionStorage.getItem('cap_user');
+  if(savedUser && db.users[savedUser]){
+    cu=db.users[savedUser];
+    hideLoading();
+    launchApp();
+    return;
+  }
   hideLoading();
   show(Object.keys(db.users).length===0?'sc-reg':'sc-login');
 };
@@ -710,14 +894,14 @@ function isOnline(username){
 
 function lastSeenText(username){
   const rec=(db.online||{})[username];
-  if(!rec) return 'Never';
+  if(!rec) return 'Never seen';
   const diff=Date.now()-rec.ts;
   if(diff<35000) return 'Online now';
-  const mins=Math.floor(diff/60000);
-  if(mins<60) return mins+'m ago';
-  const hrs=Math.floor(mins/60);
-  if(hrs<24) return hrs+'h ago';
-  return Math.floor(hrs/24)+'d ago';
+  const d=new Date(rec.ts);
+  const pad=n=>String(n).padStart(2,'0');
+  const date=`${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;
+  const time=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return `Last seen ${date} ${time}`;
 }
 
 function checkNewItems(prev){
@@ -816,13 +1000,31 @@ function goStep(n){
 function on(el,i){el.value=el.value.replace(/\D/,'');if(el.value){const all=document.querySelectorAll('.otp-box');if(i<5)all[i+1].focus();}}
 function ob(e,el,i){if(e.key==='Backspace'&&!el.value&&i>0)document.querySelectorAll('.otp-box')[i-1].focus();}
 
+function launchApp(){
+  document.getElementById('sc-login').classList.add('hidden');
+  document.getElementById('sc-reg').classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  document.getElementById('s-role').textContent=rl(cu.role);
+  document.getElementById('s-name').textContent=cu.fullName;
+  document.getElementById('s-email').textContent=cu.email;
+  document.getElementById('ni-settings').style.display=canEdit()?'flex':'none';
+  initEJS();
+  startPolling();
+  startDeadlineChecker();
+  renderAll();
+  // restore theme
+  const t=localStorage.getItem('cap_theme');
+  if(t==='light'){document.body.classList.add('light');document.getElementById('theme-btn').textContent='☀';}
+  // init simulation
+  initSimulation();
+}
+
 // ══ LOGIN ══════════════════════════════════════════════════════════════
 async function login(){
   const un2=g('l-un'),pw=g('l-pw');
   if(!un2||!pw){err('le','Enter username and password.');return;}
   const btn=document.getElementById('login-btn');
   btn.disabled=true; btn.textContent='Signing in...';
-  // reload fresh data
   const data=await fbGet('');
   if(data){
     db.users=data.users||{};
@@ -838,20 +1040,13 @@ async function login(){
   const u=db.users[un2];
   if(!u||u.password!==btoa(pw)){err('le','Incorrect username or password.');return;}
   cu=u;
-  document.getElementById('sc-login').classList.add('hidden');
-  document.getElementById('app').style.display='block';
-  document.getElementById('s-role').textContent=rl(cu.role);
-  document.getElementById('s-name').textContent=cu.fullName;
-  document.getElementById('s-email').textContent=cu.email;
-  document.getElementById('ni-settings').style.display=canEdit()?'flex':'none';
-  initEJS();
-  startPolling();
-  startDeadlineChecker();
-  renderAll();
+  sessionStorage.setItem('cap_user',cu.username);
+  launchApp();
 }
 
 function logout(){
   stopPolling();
+  sessionStorage.removeItem('cap_user');
   cu=null;
   document.getElementById('app').style.display='none';
   document.getElementById('l-pw').value='';
@@ -866,9 +1061,10 @@ function go(page,el){
   const pg=document.getElementById('pg-'+page);
   if(pg) pg.classList.add('on');
   el.classList.add('on');
-  // clear badge for this page
   clearBadge(page);
   rp(page);
+  // close mobile sidebar after nav
+  if(window.innerWidth<=768) closeSidebar();
 }
 
 function renderAll(){['dashboard','members','meetings','tasks','papers','notes','report'].forEach(rp);renderNotifs();}
@@ -881,6 +1077,7 @@ function rp(p){
   if(p==='analytics') rAna();
   if(p==='notes') rNotes();
   if(p==='report') rReport();
+  if(p==='simulation') initSimulation();
   if(p==='settings') loadEJSSettings();
 }
 
@@ -1159,12 +1356,17 @@ async function delMtg(id){if(!confirm('Delete?'))return;delete db.meetings[id];a
 
 // ══ TASKS ══════════════════════════════════════════════════════════════
 // ══ DATETIME HELPERS ════════════════════════════════════════════════════════
-function dtNow(){return new Date().toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});}
+function dtNow(){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
 function fmtDt(dateStr,timeStr){
   if(!dateStr) return '—';
   const t=timeStr||'23:59';
   const d=new Date(dateStr+'T'+t);
-  return d.toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 function isOverdue(task){
   if(!task.deadline) return false;
@@ -1379,7 +1581,7 @@ function rPap(){
     const nc=(p.paperNotes||[]).length;
     const nb=nc>0?`<span class="b bB" style="margin-left:5px">${nc} note${nc>1?'s':''}</span>`:'';
     const rs=p.reviewStatus==='Approved'?'<span class="b bD">Approved</span>':p.reviewStatus==='Rejected'?'<span class="b bRej">Rejected</span>':'<span class="b bP">Pending</span>';
-    const reviewBtn=canEdit()&&!p.reviewStatus?`<span onclick="event.stopPropagation();openReview('paper','${p.id}')" class="b bR" style="cursor:pointer;margin-left:4px">Review ▸</span>`:'';
+    const reviewBtn=canEdit()?`<span onclick="event.stopPropagation();openReview('paper','${p.id}')" class="b bR" style="cursor:pointer;margin-left:4px">Review ▸</span>`:'';
     const canEditPaper=canEdit()||p.addedby===cu.username;
     const editBtn=canEditPaper?`<button class="btn bsm bo" onclick="event.stopPropagation();openEditPaper('${p.id}')" style="margin-left:3px">Edit</button>`:'';
     const delBtn=canEditPaper?`<button class="btn bsm bd" onclick="event.stopPropagation();delPaperFull('${p.id}')" style="margin-left:3px">x</button>`:'';
@@ -1399,12 +1601,12 @@ function rPap(){
   }).join('');
   document.getElementById('t-pap').innerHTML=`<thead><tr><th>#</th><th>Title</th><th>Authors</th><th>Journal</th><th>Domain</th><th>Finding</th><th>Method</th><th>Rel.</th><th>By</th><th>Date</th><th>Review</th></tr></thead><tbody>${rows||er(11)}</tbody>`;
   document.getElementById('pap-pagination').innerHTML=`<div class="pag">
-    <button class="pag-btn" onclick="setPapPage(0)" ${pagPage===0?'disabled':''}>first</button>
-    <button class="pag-btn" onclick="setPapPage(${papPage-1})" ${papPage===0?'disabled':''}>prev</button>
-    <span class="pag-info">Page ${papPage+1} of ${totalPages} | ${n} papers | ${approvedN} approved</span>
-    <button class="pag-btn" onclick="setPapPage(${papPage+1})" ${papPage>=totalPages-1?'disabled':''}>next</button>
-    <button class="pag-btn" onclick="setPapPage(${totalPages-1})" ${pagPage>=totalPages-1?'disabled':''}>last</button>
-  </div>`.replace(/pagPage/g,'papPage');
+    <button class="pag-btn" onclick="setPapPage(0)" ${papPage===0?'disabled':''}>First</button>
+    <button class="pag-btn" onclick="setPapPage(${papPage-1})" ${papPage===0?'disabled':''}>‹ Prev</button>
+    <span class="pag-info">Page ${papPage+1} of ${totalPages} &nbsp;·&nbsp; ${n} papers &nbsp;·&nbsp; ${approvedN} approved</span>
+    <button class="pag-btn" onclick="setPapPage(${papPage+1})" ${papPage>=totalPages-1?'disabled':''}>Next ›</button>
+    <button class="pag-btn" onclick="setPapPage(${totalPages-1})" ${papPage>=totalPages-1?'disabled':''}>Last</button>
+  </div>`;
 }
 function setPapPage(n){papPage=n;rPap();}
 function openEditPaper(pid){
@@ -1430,8 +1632,15 @@ async function saveEditPaper(){
     const dup=papers().find(x=>x.id!==editPapId&&x.title.trim().toLowerCase()===newTitle.toLowerCase());
     if(dup){alert('Title already used by '+un(dup.addedby)+'.');return;}
   }
-  db.papers[editPapId]={...p,title:newTitle,authors:document.getElementById('ep-au').value,journal:document.getElementById('ep-jo').value,domain:document.getElementById('ep-do').value,finding:document.getElementById('ep-fi').value,method:document.getElementById('ep-me').value,relevance:document.getElementById('ep-re').value,link:document.getElementById('ep-li').value,notes:document.getElementById('ep-no').value};
+  db.papers[editPapId]={...p,title:newTitle,authors:document.getElementById('ep-au').value,journal:document.getElementById('ep-jo').value,domain:document.getElementById('ep-do').value,finding:document.getElementById('ep-fi').value,method:document.getElementById('ep-me').value,relevance:document.getElementById('ep-re').value,link:document.getElementById('ep-li').value,notes:document.getElementById('ep-no').value,reviewStatus:'Pending',reviewNote:'',reviewBy:'',reviewDate:'',editedAt:dtNow(),editedBy:cu.username};
   await fbSet('papers',db.papers);
+  // notify leader/supervisor that paper was re-submitted
+  users().filter(u=>u.role==='leader'||u.role==='supervisor').forEach(u=>{
+    if(u.username!==cu.username){
+      pushNotif('Paper re-submitted: '+newTitle.slice(0,40),'Edited by '+cu.fullName+' — needs review',u.username,'review');
+      sendMail(u,'Paper edited — needs re-review',`Hi ${u.fullName},\n\n${cu.fullName} edited a paper and it needs re-review:\n\n"${newTitle}"\n\n— Capstone Hub`);
+    }
+  });
   cm('mo-edit-paper');rPap();
 }
 
@@ -1639,12 +1848,12 @@ function rAna(){
 
   const mems=users().filter(u=>u.role!=='supervisor');
 
-  // 2. Attendance — attended (color) + missed (red)
+  // 2. Attendance — blue attended + red missed, full names
   mkC('c-att','bar',{
-    labels:mems.map(u=>u.fullName.split(' ')[0]),
+    labels:mems.map(u=>u.fullName),
     datasets:[
-      {label:'Attended',data:mems.map(u=>M.filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:mems.map(u=>uc(u.username)+'99'),borderRadius:4},
-      {label:'Missed',data:mems.map(u=>M.length-M.filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:'rgba(255,74,110,.55)',borderRadius:4}
+      {label:'Attended',data:mems.map(u=>M.filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:'rgba(46,159,223,.7)',borderRadius:4},
+      {label:'Missed',data:mems.map(u=>M.length-M.filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:'rgba(255,74,110,.65)',borderRadius:4}
     ]
   },{plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11,family:'Outfit'}}}}});
 
@@ -1940,6 +2149,173 @@ async function delReport(id){
 
 // close modals on overlay click
 document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+// ══ SIDEBAR TOGGLE ════════════════════════════════════════════════════════
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const main=document.querySelector('.main');
+  const overlay=document.getElementById('sb-overlay');
+  if(window.innerWidth<=768){
+    // mobile: slide in/out as overlay
+    sb.classList.toggle('open');
+    overlay.classList.toggle('open');
+  } else {
+    // desktop: push main content
+    sb.classList.toggle('collapsed');
+    main.classList.toggle('full');
+  }
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('open');
+}
+window.addEventListener('resize',()=>{
+  if(window.innerWidth>768){
+    document.getElementById('sb-overlay').classList.remove('open');
+    document.getElementById('sidebar').classList.remove('open');
+  }
+});
+
+// ══ THEME TOGGLE ══════════════════════════════════════════════════════════
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  document.getElementById('theme-btn').textContent=isLight?'☀':'🌙';
+  localStorage.setItem('cap_theme',isLight?'light':'dark');
+}
+
+// ══ SIMULATION ════════════════════════════════════════════════════════════
+let simInterval=null;
+let simFault=false;
+let simRelayOpen=false;
+
+function initSimulation(){
+  renderBenchGrid();
+  if(simInterval) clearInterval(simInterval);
+  simInterval=setInterval(simTick,1000);
+}
+
+function simTick(){
+  if(simFault&&!simRelayOpen){
+    const v=(4.95+Math.random()*0.06).toFixed(2);
+    const i=(85+Math.random()*20).toFixed(1);
+    const temp=(58+Math.random()*5).toFixed(1);
+    g2('sv1',v+' V','var(--amber)');
+    g2('si1',i+' mA','var(--red)');
+    g2('st1',temp+' °C','var(--red)');
+    document.getElementById('sim-status').className='status-pill sp-warn';
+    document.getElementById('sim-status').textContent='⚠ WARNING';
+    document.getElementById('stud-v').textContent=v+' V'; document.getElementById('stud-v').style.color='var(--amber)';
+    document.getElementById('stud-i').textContent=i+' mA'; document.getElementById('stud-i').style.color='var(--red)';
+    document.getElementById('student-status-pill').className='status-pill'; document.getElementById('student-status-pill').style='background:rgba(255,171,0,.12);color:var(--amber);border:1px solid rgba(255,171,0,.25)'; document.getElementById('student-status-pill').textContent='⚠ Warning';
+    if(parseFloat(i)>100){
+      setTimeout(simAutoRelay,1500);
+    }
+  } else if(!simRelayOpen){
+    const v=(4.97+Math.random()*0.02-0.01).toFixed(2);
+    const i=(10+Math.random()*0.6-0.3).toFixed(1);
+    const temp=(42+Math.random()*0.5).toFixed(1);
+    g2('sv1',v+' V','var(--green)');
+    g2('si1',i+' mA','var(--blue2)');
+    g2('st1',temp+' °C','var(--amber)');
+    document.getElementById('sim-status').className='status-pill sp-safe';
+    document.getElementById('sim-status').textContent='● SAFE';
+    document.getElementById('stud-v').textContent=v+' V'; document.getElementById('stud-v').style.color='var(--green)';
+    document.getElementById('stud-i').textContent=i+' mA'; document.getElementById('stud-i').style.color='var(--blue2)';
+    document.getElementById('student-status-pill').className='status-pill'; document.getElementById('student-status-pill').style='background:rgba(0,217,126,.1);color:var(--green);border:1px solid rgba(0,217,126,.2)'; document.getElementById('student-status-pill').textContent='✅ Safe';
+  }
+}
+function g2(id,val,color){const el=document.getElementById(id);if(el){el.textContent=val;el.style.color=color;}}
+
+function simAutoRelay(){
+  if(simRelayOpen) return;
+  simRelayOpen=true;
+  simFault=false;
+  document.getElementById('sim-status').className='status-pill sp-danger';
+  document.getElementById('sim-status').textContent='🔴 RELAY OPEN';
+  document.getElementById('sim-fault-btn').disabled=true;
+  g2('sv1','0.00 V','var(--text3)'); g2('si1','0.0 mA','var(--text3)');
+  g2('l2-status','● OPEN — Power Cut','var(--red)');
+  document.getElementById('student-status-pill').style='background:rgba(255,74,110,.12);color:var(--red);border:1px solid rgba(255,74,110,.25)';
+  document.getElementById('student-status-pill').textContent='🔴 Power Cut';
+  addSimLog('> [RELAY] Overcurrent detected: 102.4 mA — RELAY OPENED');
+  addSimLog('> [ALERT] Notification sent to instructor dashboard');
+  addSimLog('> [LLM] Voice: "Overcurrent detected. Power cut to bench. Check wiring."');
+  renderBenchGrid();
+}
+
+function simTriggerFault(){
+  simFault=true;
+  addSimLog('> [SENSOR] Current rising: 42mA → 67mA → 89mA → ...');
+  addSimLog('> [ANOMALY] Isolation Forest: score=-1 (ANOMALY)');
+  addSimLog('> [LLM] Voice: "Warning — current is approaching safe limit"');
+  renderBenchGrid();
+}
+
+function simReset(){
+  simFault=false; simRelayOpen=false;
+  document.getElementById('sim-fault-btn').disabled=false;
+  document.getElementById('sim-status').className='status-pill sp-safe';
+  document.getElementById('sim-status').textContent='● SAFE';
+  g2('l2-status','● Closed','var(--green)');
+  addSimLog('> [RESET] System reset — relay closed — monitoring resumed');
+  renderBenchGrid();
+}
+
+function simCutAll(){
+  addSimLog('> [INSTRUCTOR] All benches power cut manually');
+  renderBenchGrid(true);
+}
+function simRestoreAll(){
+  addSimLog('> [INSTRUCTOR] All benches power restored');
+  renderBenchGrid(false);
+}
+
+function renderBenchGrid(cutAll){
+  const statuses=['✅','✅','⚠️','✅','🔴','✅','✅','⚠️','✅'];
+  const labels=['Safe','Safe','Warning','Safe','Fault','Safe','Safe','Warning','Safe'];
+  const colors=['var(--green)','var(--green)','var(--amber)','var(--green)','var(--red)','var(--green)','var(--green)','var(--amber)','var(--green)'];
+  if(simRelayOpen){statuses[0]='🔴';labels[0]='Fault';colors[0]='var(--red)';}
+  const el=document.getElementById('bench-grid');
+  if(!el) return;
+  el.innerHTML=statuses.map((s,i)=>{
+    const num=String(i+1).padStart(2,'0');
+    const bc=cutAll?'var(--red)':colors[i];
+    return '<div class="bench-card" onclick="addSimLog(\'> [INSTRUCTOR] Bench '+num+' — manual override\')" style="cursor:pointer;border-color:'+bc+'">'
+      +'<div class="bench-num">Bench '+num+'</div>'
+      +'<div class="bench-status">'+(cutAll?'🔴':s)+'</div>'
+      +'<div style="font-size:10px;color:'+bc+'">'+(cutAll?'Cut':labels[i])+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function addSimLog(msg){
+  const el=document.getElementById('sim-log');
+  if(!el) return;
+  const d=document.createElement('div');
+  d.textContent=msg;
+  el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+}
+
+const simAnswers={
+  'Is my current too high for this LED?':'Your circuit is drawing 10.2 mA. The standard 5mm red LED has a max continuous current of 20 mA. You are within safe limits ✓',
+  'What does this warning mean?':'A warning means the current or temperature is approaching the safe limit defined in the component datasheet. Reduce load or check wiring.',
+  'My circuit is not working, help me debug':'Check: (1) power rail connections, (2) component orientation, (3) resistor values vs expected. Current reads 10.2 mA which seems low — verify your VCC connection.',
+  'Is 42°C safe for the LM7805?':'The LM7805 maximum junction temperature is 125°C. At 42°C you are well within limits. Normal operating range is 40–80°C ✓',
+  'What is the maximum current for a NE555?':'The NE555 timer maximum supply current is 200 mA, and output source/sink current is 200 mA peak. Your current reading is 10.2 mA — completely safe.'
+};
+function simAsk(){
+  const q=document.getElementById('sim-q').value;
+  const chat=document.getElementById('sim-chat');
+  const sq=document.createElement('div'); sq.className='chat-msg chat-student'; sq.textContent=q; chat.appendChild(sq);
+  setTimeout(()=>{
+    const ar=document.createElement('div'); ar.className='chat-msg chat-ai';
+    ar.textContent='🤖 '+( simAnswers[q]||'I am analyzing your circuit and sensor readings. Please wait...');
+    chat.appendChild(ar); chat.scrollTop=chat.scrollHeight;
+  },700);
+  chat.scrollTop=chat.scrollHeight;
+}
+
 </script>
 </body>
 </html>
