@@ -1,0 +1,2321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capstone Hub — Project #37</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#07101C;--bg2:#0C1A28;--bg3:#112233;--bg4:#162B40;
+  --blue:#1D6FA4;--blue2:#2E9FDF;--teal:#00C9B1;
+  --green:#00D97E;--amber:#FFAB00;--red:#FF4A6E;--purple:#9B6DFF;
+  --text:#DCF0FF;--text2:#7BA3C0;--text3:#3D6880;
+  --border:rgba(46,159,223,.12);--border2:rgba(46,159,223,.25);
+  --glow:0 0 30px rgba(29,111,164,.12);
+  --sb-w:220px;
+}
+/* ── LIGHT THEME ───────────────────────────────────── */
+body.light{
+  --bg:#F0F4F8;--bg2:#FFFFFF;--bg3:#E8EEF4;--bg4:#D8E4EE;
+  --blue:#1560A0;--blue2:#1A80C4;--teal:#009E8C;
+  --green:#00A86B;--amber:#D08000;--red:#D63450;--purple:#7044DD;
+  --text:#0A1E30;--text2:#3A6080;--text3:#7097B0;
+  --border:rgba(26,128,196,.14);--border2:rgba(26,128,196,.28);
+  --glow:0 0 30px rgba(26,128,196,.08);
+}
+body.light::before{background:radial-gradient(ellipse at 20% 20%,rgba(26,128,196,.05) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(0,158,140,.04) 0%,transparent 60%);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;min-height:100vh;transition:background .25s,color .25s;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(29,111,164,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(0,201,177,.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
+
+.screen{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;}
+.screen.hidden{display:none;}
+.auth-wrap{width:420px;max-width:100%;}
+.brand{text-align:center;margin-bottom:28px;}
+.brand-tag{display:inline-block;padding:3px 12px;border-radius:20px;border:1px solid var(--blue2);color:var(--blue2);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;}
+.brand-title{font-size:34px;font-weight:800;letter-spacing:-.03em;}
+.brand-title span{color:var(--blue2);}
+.brand-sub{color:var(--text2);font-size:13px;margin-top:4px;}
+.acard{background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:28px;box-shadow:var(--glow);}
+.astep{display:none;}.astep.on{display:block;}
+.step-bar{display:flex;gap:5px;margin-bottom:22px;justify-content:center;}
+.sdot{width:32px;height:3px;border-radius:2px;background:var(--bg4);transition:.3s;}.sdot.on{background:var(--blue2);}
+.fl{margin-bottom:14px;}
+.fl label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;}
+.fl input,.fl select{width:100%;padding:11px 13px;border-radius:9px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:.2s;}
+.fl input:focus,.fl select:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(46,159,223,.1);}
+.fl2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.otp-row{display:flex;gap:7px;justify-content:center;margin:12px 0;}
+.otp-box{width:46px;height:54px;text-align:center;font-size:22px;font-family:'JetBrains Mono',monospace;border-radius:9px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);outline:none;transition:.2s;}
+.otp-box:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(46,159,223,.1);}
+.abtn{width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;margin-top:2px;}
+.abtn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(46,159,223,.3);}
+.abtn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.aerr{background:rgba(255,74,110,.08);border:1px solid rgba(255,74,110,.2);color:var(--red);padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:10px;display:none;}
+.aok{background:rgba(0,217,126,.08);border:1px solid rgba(0,217,126,.2);color:var(--green);padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:10px;display:none;}
+.alink{text-align:center;margin-top:14px;font-size:13px;color:var(--text2);}
+.alink a{color:var(--blue2);cursor:pointer;font-weight:500;}
+.otp-note{background:rgba(46,159,223,.06);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.7;}
+.otp-note b{color:var(--blue2);}
+
+/* LOADING */
+#loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+#loading-overlay.hidden{display:none;}
+.spin{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--blue2);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--text2);}
+
+/* SYNC INDICATOR */
+#sync-dot{position:fixed;bottom:14px;right:14px;z-index:100;display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;color:var(--text3);}
+.sync-circle{width:7px;height:7px;border-radius:50%;background:var(--green);}
+.sync-circle.syncing{background:var(--amber);animation:pulse .8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+#app{display:none;min-height:100vh;}
+.shell{display:flex;min-height:100vh;}
+.sb{width:210px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+.sb-top{padding:18px 14px 14px;border-bottom:1px solid var(--border);}
+.sb-logo{font-size:10px;font-weight:700;letter-spacing:.2em;color:var(--teal);text-transform:uppercase;}
+.sb-title{font-size:15px;font-weight:800;margin-top:3px;line-height:1.2;}
+.sb-user{margin:10px 10px 6px;padding:9px 11px;border-radius:9px;background:rgba(46,159,223,.06);border:1px solid var(--border);}
+.sb-role{font-size:10px;color:var(--teal);font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+.sb-name{font-size:13px;font-weight:700;margin-top:2px;}
+.sb-email{font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;}
+.sb-nav{flex:1;padding:6px 0;}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 14px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;border-left:2px solid transparent;transition:.14s;position:relative;}
+.ni:hover{color:var(--text);background:rgba(46,159,223,.04);}
+.ni.on{color:var(--blue2);border-left-color:var(--blue2);background:rgba(46,159,223,.07);}
+.ni-ic{font-size:14px;width:17px;text-align:center;}
+.notif-pip{width:5px;height:5px;border-radius:50%;background:var(--red);position:absolute;right:12px;top:50%;transform:translateY(-50%);}
+.ni-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:10px;min-width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;}
+.online-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.online-green{background:var(--green);}
+.online-yellow{background:var(--amber);}
+/* TOAST */
+#toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;}
+.toast{background:rgba(0,217,126,.95);color:#04342C;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);animation:toastIn .3s ease;pointer-events:none;max-width:400px;text-align:center;}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.sb-out{padding:10px 10px 14px;}
+.out-btn{width:100%;padding:9px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:500;transition:.15s;}
+.out-btn:hover{background:rgba(255,74,110,.07);color:var(--red);border-color:rgba(255,74,110,.25);}
+/* PAGINATION */
+.pag{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:14px;}
+.pag-btn{padding:6px 14px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;transition:.15s;}
+.pag-btn:hover{border-color:var(--blue2);color:var(--blue2);}
+.pag-btn:disabled{opacity:.35;cursor:not-allowed;}
+.pag-info{font-size:12px;color:var(--text3);}
+
+.sb{width:var(--sb-w);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:80;transition:transform .25s ease;}
+.sb.collapsed{transform:translateX(calc(-1 * var(--sb-w)));}
+/* mobile overlay */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:75;}
+.sb-overlay.open{display:block;}
+.main{flex:1;margin-left:var(--sb-w);transition:margin-left .25s;overflow-x:hidden;}
+.main.full{margin-left:0;}
+.topbar{padding:11px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40;gap:10px;}
+.topbar-left{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:10px;}
+.topbar-left span{color:var(--teal);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.tb-icon-btn{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);cursor:pointer;font-size:15px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:.15s;}
+.tb-icon-btn:hover{border-color:var(--blue2);color:var(--text);}
+.notif-area{position:relative;}
+.nb{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:8px;background:var(--bg2);border:1px solid var(--border2);font-size:13px;color:var(--text2);cursor:pointer;transition:.15s;}
+.nb:hover{border-color:var(--blue2);color:var(--text);}
+.nc{background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:50%;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;}
+.ndrop{position:absolute;right:0;top:calc(100% + 6px);width:300px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:10px;z-index:100;box-shadow:0 8px 28px rgba(0,0,0,.5);display:none;}
+.ndrop.open{display:block;}
+.ndi{padding:9px 10px;border-radius:7px;margin-bottom:5px;background:var(--bg3);border:1px solid var(--border);}
+.ndi.unread{border-color:rgba(46,159,223,.3);}
+.ndi-t{font-size:13px;font-weight:500;}
+.ndi-s{font-size:11px;color:var(--text3);margin-top:2px;}
+
+.page{display:none;padding:20px 24px;max-width:1100px;}
+.page.on{display:block;}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.pt{font-size:20px;font-weight:800;letter-spacing:-.02em;}
+.ps{color:var(--text2);font-size:13px;margin-top:2px;}
+
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:15px;position:relative;overflow:hidden;}
+.stat::after{content:'';position:absolute;top:-10px;right:-10px;width:50px;height:50px;border-radius:50%;filter:blur(18px);opacity:.25;}
+.sc::after{background:var(--blue2)}.sg::after{background:var(--green)}.sa::after{background:var(--amber)}.sp::after{background:var(--purple)}
+.sl{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;}
+.sv{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:500;margin:3px 0 1px;}
+.ss{font-size:11px;color:var(--text3);}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;}
+.ct{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
+.chart-c{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.chart-c canvas{max-height:200px;}
+
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:9px 13px;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px 13px;border-bottom:1px solid rgba(255,255,255,.025);font-size:13px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(46,159,223,.025);}
+
+.b{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.bM{background:rgba(0,217,126,.1);color:var(--green);}
+.bMo{background:rgba(255,171,0,.1);color:var(--amber);}
+.bm{background:rgba(255,74,110,.1);color:var(--red);}
+.bD{background:rgba(0,217,126,.1);color:var(--green);}
+.bI{background:rgba(255,171,0,.1);color:var(--amber);}
+.bP{background:rgba(61,104,128,.15);color:var(--text2);}
+.bR{background:rgba(155,109,255,.15);color:var(--purple);}
+.bRej{background:rgba(255,74,110,.1);color:var(--red);}
+.bH{background:rgba(255,74,110,.1);color:var(--red);}
+.bMe{background:rgba(255,171,0,.1);color:var(--amber);}
+.bL{background:rgba(61,104,128,.12);color:var(--text2);}
+.bB{background:rgba(46,159,223,.1);color:var(--blue2);}
+.bT{background:rgba(0,201,177,.1);color:var(--teal);}
+
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.fg label{font-size:12px;font-weight:500;color:var(--text2);}
+.fg input,.fg select,.fg textarea{padding:9px 11px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:.2s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue2);}
+.fg textarea{resize:vertical;min-height:65px;}
+.fg.full{grid-column:1/-1;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.btn{padding:8px 15px;border-radius:8px;border:none;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.14s;}
+.bp{background:var(--blue);color:#fff;}.bp:hover{background:var(--blue2);}
+.bs{background:rgba(0,217,126,.1);color:var(--green);border:1px solid rgba(0,217,126,.18);}.bs:hover{background:rgba(0,217,126,.18);}
+.bd{background:rgba(255,74,110,.08);color:var(--red);border:1px solid rgba(255,74,110,.18);}.bd:hover{background:rgba(255,74,110,.16);}
+.bo{background:transparent;border:1px solid var(--border2);color:var(--text2);}.bo:hover{border-color:var(--blue2);color:var(--blue2);}
+.bsm{padding:4px 9px;font-size:11px;}
+
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:200;}
+.mo.open{display:flex;}
+.mdl{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;width:500px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.5);}
+.mt{font-size:17px;font-weight:800;margin-bottom:18px;letter-spacing:-.02em;}
+.mf{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;}
+
+.notice{padding:10px 13px;border-radius:9px;font-size:13px;margin-bottom:14px;line-height:1.6;}
+.ni-info{background:rgba(46,159,223,.07);border:1px solid rgba(46,159,223,.18);color:#93C5FD;}
+.ni-warn{background:rgba(255,171,0,.07);border:1px solid rgba(255,171,0,.18);color:#FCD34D;}
+.ni-ok{background:rgba(0,217,126,.07);border:1px solid rgba(0,217,126,.18);color:#6EE7B7;}
+.av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;flex-shrink:0;}
+.prog{height:5px;border-radius:3px;background:var(--bg4);overflow:hidden;}
+.pf{height:100%;border-radius:3px;background:var(--blue2);transition:width .5s;}
+.tl{display:flex;flex-direction:column;gap:9px;}
+.tl-i{display:flex;gap:9px;align-items:flex-start;}
+.tl-d{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+/* ── RESPONSIVE ─────────────────────────────────────── */
+@media(max-width:768px){
+  :root{--sb-w:240px;}
+  .sb{transform:translateX(calc(-1 * var(--sb-w)));}
+  .sb.open{transform:translateX(0);}
+  .main{margin-left:0!important;}
+  .g4{grid-template-columns:repeat(2,1fr)!important;}
+  .g2{grid-template-columns:1fr!important;}
+  .fgrid{grid-template-columns:1fr!important;}
+  .fl2{grid-template-columns:1fr!important;}
+  .page{padding:14px 12px;}
+  .topbar{padding:10px 14px;}
+  .mdl{padding:18px 14px;}
+}
+@media(min-width:769px) and (max-width:1100px){
+  :root{--sb-w:190px;}
+  .page{padding:16px 18px;}
+  .g4{grid-template-columns:repeat(2,1fr);}
+}
+@media(min-width:1101px){
+  :root{--sb-w:220px;}
+  .page{padding:20px 28px;}
+}
+/* ── SIMULATION PAGE ─────────────────────────────────── */
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:768px){.sim-grid{grid-template-columns:1fr;}}
+.sim-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;}
+.sim-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;}
+.sensor-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:9px;background:var(--bg3);margin-bottom:8px;}
+.sensor-label{font-size:12px;color:var(--text2);}
+.sensor-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+.sp-safe{background:rgba(0,217,126,.12);color:var(--green);border:1px solid rgba(0,217,126,.25);}
+.sp-warn{background:rgba(255,171,0,.12);color:var(--amber);border:1px solid rgba(255,171,0,.25);}
+.sp-danger{background:rgba(255,74,110,.12);color:var(--red);border:1px solid rgba(255,74,110,.25);}
+.chat-area{background:var(--bg3);border-radius:10px;padding:12px;min-height:130px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:180px;}
+.chat-msg{padding:8px 12px;border-radius:9px;font-size:12px;line-height:1.5;max-width:90%;}
+.chat-ai{background:rgba(46,159,223,.1);border:1px solid var(--border2);color:var(--text);align-self:flex-start;}
+.chat-student{background:rgba(0,201,177,.1);border:1px solid rgba(0,201,177,.2);color:var(--text);align-self:flex-end;}
+.sim-board{background:#2a3540;border-radius:10px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8dd;line-height:1.9;min-height:100px;}
+.bench-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.bench-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.bench-num{font-size:11px;color:var(--text3);margin-bottom:6px;}
+.bench-status{font-size:18px;margin-bottom:4px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div class="spin"></div>
+  <div class="loading-txt" id="loading-txt">Connecting to database...</div>
+</div>
+
+<!-- SYNC INDICATOR -->
+<div id="sync-dot" style="display:none">
+  <div class="sync-circle" id="sync-circle"></div>
+  <span id="sync-txt">Live</span>
+</div>
+
+<!-- REGISTER -->
+<div class="screen hidden" id="sc-reg">
+<div class="auth-wrap">
+  <div class="brand">
+    <div class="brand-tag">Join Team</div>
+    <div class="brand-title">Create <span>Account</span></div>
+    <div class="brand-sub">Project #37 — AI Lab Companion</div>
+  </div>
+  <div class="acard">
+    <div class="step-bar">
+      <div class="sdot on" id="d1"></div><div class="sdot" id="d2"></div><div class="sdot" id="d3"></div>
+    </div>
+    <div class="astep on" id="s1">
+      <div class="aerr" id="e1"></div>
+      <div class="fl2">
+        <div class="fl"><label>First name</label><input id="r-fn" placeholder="Ahmed"></div>
+        <div class="fl"><label>Last name</label><input id="r-ln" placeholder="Al Mansoori"></div>
+      </div>
+      <div class="fl"><label>Email address</label><input id="r-em" type="email" placeholder="ahmed@students.ac.ae"></div>
+      <div class="fl"><label>Username <span style="color:var(--text3);font-weight:400">(no spaces)</span></label><input id="r-un" placeholder="ahmed_m" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"></div>
+      <div class="fl"><label>Role</label>
+        <select id="r-role" onfocus="updateRoleOpts()">
+          <option value="member">Team Member</option>
+          <option value="leader">Team Leader</option>
+          <option value="supervisor">Supervisor</option>
+        </select>
+      </div>
+      <div id="role-hint" style="font-size:11px;color:var(--text3);margin-top:-8px;margin-bottom:10px"></div>
+      <div class="fl2">
+        <div class="fl"><label>Password</label><input type="password" id="r-pw" placeholder="Min 6 chars"></div>
+        <div class="fl"><label>Confirm</label><input type="password" id="r-pw2" placeholder="Repeat"></div>
+      </div>
+      <button class="abtn" onclick="step1()">Continue →</button>
+      <div class="alink"><a onclick="show('sc-login')">Already registered? Sign in</a></div>
+    </div>
+    <div class="astep" id="s2">
+      <div class="aerr" id="e2"></div>
+      <div class="aok" id="ok2"></div>
+      <div class="otp-note">
+        ✅ Your verification code is:<br>
+        <div id="otp-display" style="font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;color:var(--blue2);letter-spacing:.35em;text-align:center;padding:10px 0;background:var(--bg3);border-radius:8px;margin:6px 0 4px;border:1px solid var(--border2)"></div>
+        <span style="font-size:11px;color:var(--text3)">Registering as: <span id="em-show" style="color:var(--blue2)"></span></span>
+      </div>
+      <div style="text-align:center;margin-bottom:4px;font-size:13px;color:var(--text2)">Enter the 6-digit code</div>
+      <div class="otp-row">
+        <input class="otp-box" maxlength="1" oninput="on(this,0)" onkeydown="ob(event,this,0)">
+        <input class="otp-box" maxlength="1" oninput="on(this,1)" onkeydown="ob(event,this,1)">
+        <input class="otp-box" maxlength="1" oninput="on(this,2)" onkeydown="ob(event,this,2)">
+        <input class="otp-box" maxlength="1" oninput="on(this,3)" onkeydown="ob(event,this,3)">
+        <input class="otp-box" maxlength="1" oninput="on(this,4)" onkeydown="ob(event,this,4)">
+        <input class="otp-box" maxlength="1" oninput="on(this,5)" onkeydown="ob(event,this,5)">
+      </div>
+      <button class="abtn" onclick="verifyOTP()">Verify & Create Account →</button>
+      <div class="alink"><a onclick="show('sc-login')">Back to login</a></div>
+    </div>
+    <div class="astep" id="s3">
+      <div style="text-align:center;padding:16px 0">
+        <div style="font-size:44px;margin-bottom:10px">✅</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px">Account created!</div>
+        <div style="color:var(--text2);font-size:13px;margin-bottom:22px">You can now sign in.</div>
+        <button class="abtn" onclick="show('sc-login')">Go to Sign In →</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen hidden" id="sc-login">
+<div class="auth-wrap">
+  <div class="brand">
+    <div class="brand-tag">Welcome back</div>
+    <div class="brand-title">Sign <span>In</span></div>
+    <div class="brand-sub">Project #37 — AI Lab Companion</div>
+  </div>
+  <div class="acard">
+    <div class="aerr" id="le"></div>
+    <div class="fl"><label>Username</label><input id="l-un" placeholder="your_username" oninput="this.value=this.value.toLowerCase()" onkeydown="if(event.key==='Enter')login()"></div>
+    <div class="fl"><label>Password</label><input type="password" id="l-pw" placeholder="Your password" onkeydown="if(event.key==='Enter')login()"></div>
+    <button class="abtn" id="login-btn" onclick="login()">Sign In →</button>
+    <div class="alink"><a onclick="show('sc-reg')">No account? Register</a></div>
+  </div>
+</div>
+</div>
+
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+<!-- APP -->
+<div id="app">
+<nav class="sb" id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo">Capstone Hub</div>
+    <div class="sb-title">AI Lab<br>Companion</div>
+  </div>
+  <div class="sb-user">
+    <div class="sb-role" id="s-role">Member</div>
+    <div class="sb-name" id="s-name">—</div>
+    <div class="sb-email" id="s-email">—</div>
+  </div>
+  <div class="sb-nav">
+    <div class="ni on" onclick="go('dashboard',this)" id="nav-dashboard"><span class="ni-ic">◈</span>Dashboard</div>
+    <div class="ni" onclick="go('members',this)" id="nav-members"><span class="ni-ic">◉</span>Members</div>
+    <div class="ni" onclick="go('meetings',this)" id="nav-meetings"><span class="ni-ic">◷</span>Meetings<span class="ni-badge" id="badge-meetings" style="display:none">0</span></div>
+    <div class="ni" onclick="go('tasks',this)" id="nav-tasks"><span class="ni-ic">◻</span>Tasks<span class="ni-badge" id="badge-tasks" style="display:none">0</span></div>
+    <div class="ni" onclick="go('papers',this)" id="nav-papers"><span class="ni-ic">◈</span>Papers<span class="ni-badge" id="badge-papers" style="display:none">0</span></div>
+    <div class="ni" onclick="go('analytics',this)" id="nav-analytics"><span class="ni-ic">◌</span>Analytics</div>
+    <div class="ni" onclick="go('notes',this)" id="nav-notes"><span class="ni-ic">◇</span>Notes<span class="ni-badge" id="badge-notes" style="display:none">0</span></div>
+    <div class="ni" onclick="go('report',this)" id="nav-report"><span class="ni-ic">◑</span>Report<span class="ni-badge" id="badge-report" style="display:none">0</span></div>
+    <div class="ni" onclick="go('simulation',this)" id="nav-simulation"><span class="ni-ic">⚡</span>Simulation</div>
+    <div class="ni" id="ni-settings" onclick="go('settings',this)"><span class="ni-ic">⚙</span>Settings</div>
+  </div>
+  <div class="sb-out"><button class="out-btn" onclick="logout()">← Sign Out</button></div>
+</nav>
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="tb-icon-btn" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+      <span>Project <span>#37</span> — <span>AI Lab Companion</span></span>
+    </div>
+    <div class="topbar-right">
+      <button class="tb-icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      <div class="notif-area">
+        <div class="nb" onclick="toggleND()">🔔 <span id="nc-txt">Notifications</span><span class="nc" id="nc" style="display:none">0</span></div>
+        <div class="ndrop" id="ndrop">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;padding:0 3px">NOTIFICATIONS</div>
+          <div id="nl"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="pg-dashboard" class="page on">
+    <div class="ph"><div><div class="pt">Dashboard</div><div class="ps">Live team overview — synced in real time</div></div></div>
+    <div class="g4" id="d-stats"></div>
+    <div class="g2">
+      <div class="chart-c"><div class="ct">Tasks by priority</div><canvas id="c-phase"></canvas></div>
+      <div class="chart-c"><div class="ct">Papers collected (target 100)</div><canvas id="c-papers"></canvas></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="ct">Member overview</div><div id="d-mem"></div></div>
+      <div class="card"><div class="ct">Recent activity</div><div class="tl" id="d-act"></div></div>
+    </div>
+  </div>
+
+  <!-- MEMBERS -->
+  <div id="pg-members" class="page">
+    <div class="ph"><div><div class="pt">Members</div><div class="ps">Click any member to see full performance</div></div></div>
+    <div class="card" style="margin-bottom:14px"><div class="tw"><table id="t-mem"></table></div></div>
+    <!-- COMPETITION LEADERBOARD -->
+    <div class="card" id="competition-card">
+      <div class="ct">Papers competition</div>
+      <div id="competition-board"></div>
+    </div>
+  </div>
+
+  <!-- MEETINGS -->
+  <div id="pg-meetings" class="page">
+    <div class="ph"><div><div class="pt">Meetings</div><div class="ps">Attendance & minutes</div></div><div id="mtg-btn"></div></div>
+    <div class="card"><div class="tw"><table id="t-mtg"></table></div></div>
+  </div>
+
+  <!-- TASKS -->
+  <div id="pg-tasks" class="page">
+    <div class="ph"><div><div class="pt">Tasks</div><div class="ps">Assignments & completion</div></div><div id="tsk-btn"></div></div>
+    <div class="card"><div class="tw"><table id="t-tsk"></table></div></div>
+  </div>
+
+  <!-- PAPERS -->
+  <div id="pg-papers" class="page">
+    <div class="ph"><div><div class="pt">Papers</div><div class="ps">Click any row to see full details</div></div></div>
+    <div class="card">
+      <div class="ct">Add paper</div>
+      <div class="fgrid">
+        <div class="fg"><label>Title</label><input id="p-ti" placeholder="Paper title" oninput="checkDupTitle(this.value)">
+        <div id="dup-warn" style="font-size:12px;color:var(--red);margin-top:4px;display:none"></div></div>
+        <div class="fg"><label>Authors & Year</label><input id="p-au" placeholder="Smith et al. (2023)"></div>
+        <div class="fg"><label>Journal</label><input id="p-jo" placeholder="IEEE IoT Journal"></div>
+        <div class="fg"><label>Domain</label><input id="p-do" placeholder="Computer Vision / IoT"></div>
+        <div class="fg"><label>Key finding</label><input id="p-fi" placeholder="Main result"></div>
+        <div class="fg"><label>Method</label><input id="p-me" placeholder="CNN, YOLO, Transformer..."></div>
+        <div class="fg"><label>Relevance</label><select id="p-re"><option>High</option><option>Medium</option><option>Low</option></select></div>
+        <div class="fg"><label>DOI link</label><input id="p-li" placeholder="https://doi.org/..."></div>
+        <div class="fg full"><label>Your notes</label><textarea id="p-no" placeholder="How this paper helps your project..."></textarea></div>
+      </div>
+      <button class="btn bp" onclick="addPaper()">+ Add Paper</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="ct" style="margin-bottom:0">All papers — <span id="pc">0</span> collected | <span id="pc-approved" style="color:var(--purple)">0</span> approved / 100 goal</div>
+        <button class="btn bs" onclick="downloadExcel()" style="font-size:12px;padding:6px 14px">⬇ Download Excel</button>
+      </div>
+      <div class="prog" style="margin-bottom:12px"><div class="pf" id="pp" style="width:0%"></div></div>
+      <div class="tw"><table id="t-pap"></table></div>
+      <div id="pap-pagination"></div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="pg-analytics" class="page">
+    <div class="ph"><div><div class="pt">Analytics</div><div class="ps">Visual progress charts</div></div></div>
+    <div class="g2" style="margin-bottom:14px">
+      <div class="chart-c"><div class="ct">Task status</div><canvas id="c-status"></canvas></div>
+      <div class="chart-c"><div class="ct">Attendance per member</div><canvas id="c-att"></canvas></div>
+    </div>
+    <div class="g2" style="margin-bottom:14px">
+      <div class="chart-c"><div class="ct">Approved papers per member</div><canvas id="c-pap-mem"></canvas></div>
+      <div class="chart-c"><div class="ct">Tasks: assigned vs done</div><canvas id="c-tsk-mem"></canvas></div>
+    </div>
+    <div class="chart-c"><div class="ct">Weekly task completion</div><canvas id="c-week" style="max-height:140px"></canvas></div>
+  </div>
+
+  <!-- NOTES -->
+  <div id="pg-notes" class="page">
+    <div class="ph"><div><div class="pt">Notes & Feedback</div><div class="ps">Leader & supervisor messages</div></div></div>
+    <div id="note-form"></div>
+    <div id="note-list"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="pg-settings" class="page">
+    <div class="ph"><div><div class="pt">Email Settings</div><div class="ps">Connect EmailJS for real email notifications</div></div></div>
+    <div class="card" style="max-width:560px;margin-bottom:16px">
+      <div class="ct">How to get free EmailJS keys</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--text2);line-height:1.8">
+        <div style="padding:12px 14px;background:var(--bg3);border-radius:9px;border-left:3px solid var(--blue2)"><b style="color:var(--text)">Step 1</b> — Go to <a href="https://emailjs.com" target="_blank" style="color:var(--blue2)">emailjs.com</a> → Sign up free</div>
+        <div style="padding:12px 14px;background:var(--bg3);border-radius:9px;border-left:3px solid var(--teal)"><b style="color:var(--text)">Step 2</b> — Email Services → Add New Service → Gmail → Copy <b style="color:var(--teal)">Service ID</b></div>
+        <div style="padding:12px 14px;background:var(--bg3);border-radius:9px;border-left:3px solid var(--green)"><b style="color:var(--text)">Step 3</b> — Email Templates → Create template → Body: <code style="color:var(--green)">Hi {{to_name}}, {{message}}</code> → Copy <b style="color:var(--green)">Template ID</b></div>
+        <div style="padding:12px 14px;background:var(--bg3);border-radius:9px;border-left:3px solid var(--amber)"><b style="color:var(--text)">Step 4</b> — Account → API Keys → Copy <b style="color:var(--amber)">Public Key</b></div>
+      </div>
+    </div>
+    <div class="card" style="max-width:560px">
+      <div class="ct">EmailJS keys</div>
+      <div id="ejs-status" class="notice ni-info" style="display:none"></div>
+      <div class="fg"><label>Public Key</label><input id="ejs-pk" placeholder="xYz1234AbCdEfGhIj"></div>
+      <div class="fg"><label>Service ID</label><input id="ejs-sv" placeholder="service_abc12345"></div>
+      <div class="fg"><label>Template ID</label><input id="ejs-tm" placeholder="template_xyz78901"></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn bp" onclick="saveEJS()">Save & Activate →</button>
+        <button class="btn bo" onclick="testEJS()">Send test to myself</button>
+      </div>
+      <div style="margin-top:12px;padding:10px 12px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text3)">
+        Status: <span id="ejs-current">⚪ Not configured</span>
+      </div>
+    </div>
+  </div>
+  <!-- REPORT PAGE -->
+  <div id="pg-report" class="page">
+    <div class="ph"><div><div class="pt">Report Links</div><div class="ps">Share document links with the team (Overleaf, Google Docs, etc.)</div></div>
+    <div id="report-add-btn"></div></div>
+    <div id="report-add-form"></div>
+    <div class="card"><div id="report-list"></div></div>
+  </div>
+
+  <!-- SIMULATION PAGE -->
+  <div id="pg-simulation" class="page">
+    <div class="ph"><div><div class="pt">Project Simulation</div><div class="ps">Live demo of the AI Lab Companion system</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="sim-status" class="status-pill sp-safe">● SAFE</span>
+        <button class="btn bp" onclick="simTriggerFault()" id="sim-fault-btn">Simulate Fault</button>
+        <button class="btn bo" onclick="simReset()">Reset</button>
+      </div>
+    </div>
+
+    <!-- SENSOR READINGS -->
+    <div class="sim-grid">
+      <div class="sim-card">
+        <div class="sim-title">🔌 Sensor Hub — Real-time Readings</div>
+        <div class="sensor-row"><span class="sensor-label">CH1 · 5V Rail — Voltage</span><span class="sensor-val" id="sv1" style="color:var(--green)">4.97 V</span></div>
+        <div class="sensor-row"><span class="sensor-label">CH1 · 5V Rail — Current</span><span class="sensor-val" id="si1" style="color:var(--blue2)">10.2 mA</span></div>
+        <div class="sensor-row"><span class="sensor-label">CH2 · High Power — Current</span><span class="sensor-val" id="si2" style="color:var(--blue2)">0.0 mA</span></div>
+        <div class="sensor-row"><span class="sensor-label">🌡 Temperature — LM7805</span><span class="sensor-val" id="st1" style="color:var(--amber)">42.3 °C</span></div>
+        <div class="sensor-row"><span class="sensor-label">📷 Vision — Status</span><span class="sensor-val" id="sv-cam" style="color:var(--green);font-size:12px">CLEAR</span></div>
+        <div style="margin-top:12px;font-size:11px;color:var(--text3)">Readings update every second · STM32 firmware · INA226 x4</div>
+      </div>
+
+      <div class="sim-card">
+        <div class="sim-title">🤖 AI Assistant — LLM Interface</div>
+        <div class="chat-area" id="sim-chat">
+          <div class="chat-ai">👋 Hello! I'm monitoring your breadboard circuit. Everything looks normal. Ask me anything about your components.</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <select id="sim-q" style="flex:1;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:12px">
+            <option>Is my current too high for this LED?</option>
+            <option>What does this warning mean?</option>
+            <option>My circuit is not working, help me debug</option>
+            <option>Is 42°C safe for the LM7805?</option>
+            <option>What is the maximum current for a NE555?</option>
+          </select>
+          <button class="btn bp" onclick="simAsk()">Ask →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSTRUCTOR + STUDENT VIEWS -->
+    <div class="sim-grid">
+      <div class="sim-card">
+        <div class="sim-title">👨‍🏫 Instructor Dashboard — All Benches</div>
+        <div class="bench-grid" id="bench-grid"></div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text2)">Click any bench to simulate override</div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn bsm bp" onclick="simCutAll()">Cut All Power</button>
+          <button class="btn bsm bs" onclick="simRestoreAll()">Restore All</button>
+        </div>
+      </div>
+
+      <div class="sim-card">
+        <div class="sim-title">👩‍🎓 Student View — Bench 01</div>
+        <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:12px;font-weight:600">My Circuit Status</span>
+            <span class="status-pill" id="student-status-pill" style="background:rgba(0,217,126,.1);color:var(--green);border:1px solid rgba(0,217,126,.2)">✅ Safe</span>
+          </div>
+          <div class="sensor-row" style="margin:0 0 6px"><span class="sensor-label" style="font-size:11px">Voltage</span><span class="sensor-val" id="stud-v" style="font-size:14px;color:var(--green)">4.97 V</span></div>
+          <div class="sensor-row"><span class="sensor-label" style="font-size:11px">Current</span><span class="sensor-val" id="stud-i" style="font-size:14px;color:var(--blue2)">10.2 mA</span></div>
+        </div>
+        <div class="sim-board" id="sim-log">
+          <div>> [BOOT] STM32 firmware v2.1 — relay CLOSED</div>
+          <div>> [SENSOR] INA226 calibrated @ 100 sps</div>
+          <div>> [VISION] YOLOv8 model loaded — camera active</div>
+          <div>> [LLM] RAG pipeline ready — 3 datasheets loaded</div>
+          <div>> [STATUS] All systems nominal ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAFETY CHAIN VISUALIZER -->
+    <div class="sim-card" style="margin-bottom:16px">
+      <div class="sim-title">🛡 Safety Chain — Layer Status</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" id="safety-layers">
+        <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(0,217,126,.25)">
+          <div style="font-size:20px;margin-bottom:6px">📊</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:3px">Layer 1</div>
+          <div style="font-size:11px;color:var(--text3)">Anomaly Model</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--green)">● Active</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(0,217,126,.25)">
+          <div style="font-size:20px;margin-bottom:6px">⚡</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:3px">Layer 2</div>
+          <div style="font-size:11px;color:var(--text3)">Software Relay</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--green)" id="l2-status">● Closed</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(0,217,126,.25)">
+          <div style="font-size:20px;margin-bottom:6px">🔧</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:3px">Layer 3</div>
+          <div style="font-size:11px;color:var(--text3)">STM32 Hard Limit</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--green)">● Armed</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(0,217,126,.25)">
+          <div style="font-size:20px;margin-bottom:6px">🔩</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:3px">Layer 4</div>
+          <div style="font-size:11px;color:var(--text3)">Hardware Fuse</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--green)">● Intact</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+<!-- TOAST CONTAINER -->
+<div id="toast-wrap"></div>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="mo-mtg">
+<div class="mdl">
+  <div class="mt">Add Meeting Record</div>
+  <div class="fgrid">
+    <div class="fg"><label>Date</label><input type="date" id="m-dt"></div>
+    <div class="fg"><label>Type</label><select id="m-ty"><option>Supervisor meeting</option><option>Team meeting</option><option>Both</option></select></div>
+    <div class="fg full"><label>Minutes / Agenda</label><textarea id="m-ag" placeholder="What was discussed..."></textarea></div>
+  </div>
+  <div style="margin-top:10px"><div class="ct">Attendance</div><div id="att"></div></div>
+  <div class="mf">
+    <button class="btn bd" onclick="cm('mo-mtg')">Cancel</button>
+    <button class="btn bp" onclick="saveMtg()">Save Meeting</button>
+  </div>
+</div>
+</div>
+
+<div class="mo" id="mo-tsk">
+<div class="mdl">
+  <div class="mt" id="tsk-modal-title">Assign Task</div>
+  <div class="fgrid">
+    <div class="fg full"><label>Task description</label><input id="t-ds" placeholder="What needs to be done"></div>
+    <div class="fg"><label>Assign to</label><select id="t-wh"></select></div>
+    <div class="fg"><label>Priority</label><select id="t-pr"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+    <div class="fg"><label>Deadline date</label><input type="date" id="t-dl"></div>
+    <div class="fg"><label>Deadline time</label><input type="time" id="t-tm" value="23:59"></div>
+  </div>
+  <div class="mf">
+    <button class="btn bd" onclick="cm('mo-tsk')">Cancel</button>
+    <button class="btn bp" id="tsk-save-btn" onclick="saveTask()">Assign Task</button>
+  </div>
+</div>
+</div>
+
+<div class="mo" id="mo-paper">
+<div class="mdl" style="width:620px;max-width:96vw">
+  <div id="pmod-body"></div>
+</div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div class="mo" id="mo-review">
+<div class="mdl" style="width:480px">
+  <div class="mt">Review Submission</div>
+  <div style="background:var(--bg3);border-radius:9px;padding:12px;margin-bottom:16px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:4px" id="rev-title"></div>
+    <div style="font-size:12px;color:var(--text2)" id="rev-by"></div>
+  </div>
+  <div class="fg">
+    <label>Note to member <span style="color:var(--text3);font-weight:400">(optional — shown to member)</span></label>
+    <textarea id="rev-note" placeholder="Write feedback, corrections, or approval message..."></textarea>
+  </div>
+  <div class="mf">
+    <button class="btn bo" onclick="cm('mo-review')">Cancel</button>
+    <button class="btn bd" onclick="submitReview('reject')">✗ Reject</button>
+    <button class="btn bs" onclick="submitReview('approve')">✓ Approve</button>
+  </div>
+</div>
+</div>
+
+<!-- EDIT PAPER MODAL -->
+<div class="mo" id="mo-edit-paper">
+<div class="mdl" style="width:560px">
+  <div class="mt">Edit Paper</div>
+  <div class="fgrid">
+    <div class="fg"><label>Title</label><input id="ep-ti"></div>
+    <div class="fg"><label>Authors & Year</label><input id="ep-au"></div>
+    <div class="fg"><label>Journal</label><input id="ep-jo"></div>
+    <div class="fg"><label>Domain</label><input id="ep-do"></div>
+    <div class="fg"><label>Key finding</label><input id="ep-fi"></div>
+    <div class="fg"><label>Method</label><input id="ep-me"></div>
+    <div class="fg"><label>Relevance</label><select id="ep-re"><option>High</option><option>Medium</option><option>Low</option></select></div>
+    <div class="fg"><label>DOI link</label><input id="ep-li"></div>
+    <div class="fg full"><label>Notes</label><textarea id="ep-no"></textarea></div>
+  </div>
+  <div class="mf">
+    <button class="btn bd" onclick="cm('mo-edit-paper')">Cancel</button>
+    <button class="btn bp" onclick="saveEditPaper()">Save Changes</button>
+  </div>
+</div>
+</div>
+
+<!-- MEMBER PROFILE MODAL -->
+<div class="mo" id="mo-member">
+<div class="mdl" style="width:620px;max-width:96vw;max-height:92vh">
+  <div id="member-profile-body"></div>
+</div>
+</div>
+
+<!-- EXTEND DEADLINE MODAL -->
+<div class="mo" id="mo-extend">
+<div class="mdl" style="width:400px">
+  <div class="mt">Extend Deadline</div>
+  <div style="background:var(--bg3);border-radius:9px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:var(--text2)" id="ext-task-name"></div>
+  <div class="fgrid">
+    <div class="fg"><label>New deadline date</label><input type="date" id="ext-dl"></div>
+    <div class="fg"><label>New deadline time</label><input type="time" id="ext-tm" value="23:59"></div>
+  </div>
+  <div class="mf">
+    <button class="btn bd" onclick="cm('mo-extend')">Cancel</button>
+    <button class="btn bp" onclick="saveExtend()">Extend Deadline</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ══ FIREBASE CONFIG ════════════════════════════════════════════════════════
+const FBURL = 'https://capstone1-ailab-default-rtdb.firebaseio.com';
+
+async function fbGet(path=''){
+  try{
+    const r=await fetch(`${FBURL}/${path}.json`);
+    if(!r.ok) return null;
+    return r.json();
+  }catch(e){return null;}
+}
+async function fbSet(path,data){
+  setSyncing(true);
+  try{
+    await fetch(`${FBURL}/${path}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  }finally{setSyncing(false);}
+}
+async function fbPatch(path,data){
+  setSyncing(true);
+  try{
+    await fetch(`${FBURL}/${path}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  }finally{setSyncing(false);}
+}
+async function fbDel(path){
+  setSyncing(true);
+  try{
+    await fetch(`${FBURL}/${path}.json`,{method:'DELETE'});
+  }finally{setSyncing(false);}
+}
+
+// ══ STATE ════════════════════════════════════════════════════════════════
+let db={users:{},meetings:{},tasks:{},papers:{},notes:{},notifs:{},reports:{}};
+let cu=null;
+let otp='';
+let reg={};
+let CHS={};
+let pollTimer=null;
+let lastData='';
+let papPage=0;
+let editPapId=null;
+let lastSeenKey='cap_lastseen';
+const PAL=['#2E9FDF','#00D97E','#FFAB00','#FF4A6E','#9B6DFF','#00C9B1','#FF7143','#E879A0'];
+// badge tracking
+let seenCounts={meetings:0,tasks:0,papers:0,notes:0,report:0};
+
+function uid(){return 'id'+Date.now()+Math.random().toString(36).slice(2,6);}
+function td(){return new Date().toISOString().slice(0,10);}
+function g(id){return document.getElementById(id)?.value?.trim()||'';}
+function ini(name){return(name||'?').split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);}
+function rl(r){return r==='leader'?'Team Leader':r==='supervisor'?'Supervisor':'Member';}
+function canEdit(){return cu&&(cu.role==='leader'||cu.role==='supervisor');}
+function er(c){return`<tr><td colspan="${c}" style="text-align:center;padding:24px;color:var(--text3)">Nothing here yet.</td></tr>`;}
+function err(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
+function om(id){document.getElementById(id).classList.add('open');}
+function cm(id){document.getElementById(id).classList.remove('open');}
+
+function users(){return Object.values(db.users||{});}
+function meetings(){return Object.values(db.meetings||{}).sort((a,b)=>a.date<b.date?1:-1);}
+function tasks(){return Object.values(db.tasks||{});}
+function papers(){return Object.values(db.papers||{}).sort((a,b)=>a.date<b.date?1:-1);}
+function notes(){return Object.values(db.notes||{}).sort((a,b)=>a.date<b.date?1:-1);}
+function myNotifs(){return Object.values((db.notifs||{})[cu?.username]||{}).sort((a,b)=>a.date<b.date?1:-1);}
+
+function uc(username){
+  const all=users();
+  const i=all.findIndex(u=>u.username===username);
+  return PAL[Math.max(0,i)%PAL.length];
+}
+function un(username){
+  if(username==='all') return 'All members';
+  const u=db.users?.[username];
+  return u?u.fullName:username;
+}
+
+// ══ SYNC UI ══════════════════════════════════════════════════════════════
+function setSyncing(s){
+  const c=document.getElementById('sync-circle');
+  const t=document.getElementById('sync-txt');
+  if(!c) return;
+  c.classList.toggle('syncing',s);
+  t.textContent=s?'Saving...':'Live';
+}
+
+// ══ STARTUP ══════════════════════════════════════════════════════════════
+window.onload=async()=>{
+  setLoading('Connecting to database...');
+  const data=await fbGet('');
+  if(data){
+    db.users=data.users||{};
+    db.meetings=data.meetings||{};
+    db.tasks=data.tasks||{};
+    db.papers=data.papers||{};
+    db.notes=data.notes||{};
+    db.notifs=data.notifs||{};
+    db.reports=data.reports||{};
+    db.online=data.online||{};
+    lastData=JSON.stringify(data);
+  }
+  // Restore session if user was previously logged in
+  const savedUser=sessionStorage.getItem('cap_user');
+  if(savedUser && db.users[savedUser]){
+    cu=db.users[savedUser];
+    hideLoading();
+    launchApp();
+    return;
+  }
+  hideLoading();
+  show(Object.keys(db.users).length===0?'sc-reg':'sc-login');
+};
+
+function setLoading(txt){
+  document.getElementById('loading-txt').textContent=txt;
+  document.getElementById('loading-overlay').classList.remove('hidden');
+}
+function hideLoading(){document.getElementById('loading-overlay').classList.add('hidden');}
+
+// ══ POLLING ══════════════════════════════════════════════════════════════
+function startPolling(){
+  document.getElementById('sync-dot').style.display='flex';
+  // update last seen every 30s
+  updateLastSeen();
+  setInterval(updateLastSeen,30000);
+  pollTimer=setInterval(async()=>{
+    const data=await fbGet('');
+    if(!data) return;
+    const h=JSON.stringify(data);
+    if(h!==lastData){
+      const prev={m:Object.keys(db.meetings||{}).length,t:Object.keys(db.tasks||{}).length,p:Object.keys(db.papers||{}).length,n:Object.keys(db.notes||{}).length,r:Object.keys(db.reports||{}).length};
+      lastData=h;
+      db.users=data.users||{};
+      db.meetings=data.meetings||{};
+      db.tasks=data.tasks||{};
+      db.papers=data.papers||{};
+      db.notes=data.notes||{};
+      db.notifs=data.notifs||{};
+      db.reports=data.reports||{};
+      db.online=data.online||{};
+      // detect new items and show toasts + badges
+      checkNewItems(prev);
+      renderAll();
+    }
+  },5000);
+}
+
+async function updateLastSeen(){
+  if(!cu) return;
+  if(!db.online) db.online={};
+  db.online[cu.username]={ts:Date.now(),name:cu.fullName};
+  await fbSet('online/'+cu.username,{ts:Date.now(),name:cu.fullName});
+}
+
+function isOnline(username){
+  const rec=(db.online||{})[username];
+  if(!rec) return false;
+  return (Date.now()-rec.ts)<35000; // 35s threshold
+}
+
+function lastSeenText(username){
+  const rec=(db.online||{})[username];
+  if(!rec) return 'Never seen';
+  const diff=Date.now()-rec.ts;
+  if(diff<35000) return 'Online now';
+  const d=new Date(rec.ts);
+  const pad=n=>String(n).padStart(2,'0');
+  const date=`${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;
+  const time=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return `Last seen ${date} ${time}`;
+}
+
+function checkNewItems(prev){
+  const cur={m:Object.keys(db.meetings||{}).length,t:Object.keys(db.tasks||{}).length,p:Object.keys(db.papers||{}).length,n:Object.keys(db.notes||{}).length,r:Object.keys(db.reports||{}).length};
+  const active=document.querySelector('.ni.on')?.id?.replace('nav-','');
+  if(cur.m>prev.m&&active!=='meetings'){const n=cur.m-prev.m;showBadge('meetings',n);showToast(n+' new meeting'+(n>1?'s':'')+' recorded');}
+  if(cur.t>prev.t&&active!=='tasks'){const n=cur.t-prev.t;showBadge('tasks',n);showToast(n+' new task'+(n>1?'s':'')+' assigned');}
+  if(cur.p>prev.p&&active!=='papers'){const n=cur.p-prev.p;showBadge('papers',n);showToast(n+' new paper'+(n>1?'s':'')+' added');}
+  if(cur.n>prev.n&&active!=='notes'){const n=cur.n-prev.n;showBadge('notes',n);showToast(n+' new note'+(n>1?'s':'')+' posted');}
+  if(cur.r>prev.r&&active!=='report'){const n=cur.r-prev.r;showBadge('report',n);showToast(n+' new report link'+(n>1?'s':'')+' added');}
+}
+
+function showBadge(key,count){
+  const el=document.getElementById('badge-'+key);
+  if(!el) return;
+  const cur=parseInt(el.textContent)||0;
+  el.textContent=cur+count;
+  el.style.display='inline-flex';
+}
+
+function clearBadge(key){
+  const el=document.getElementById('badge-'+key);
+  if(el){el.textContent='0';el.style.display='none';}
+}
+
+function showToast(msg){
+  const wrap=document.getElementById('toast-wrap');
+  const t=document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  wrap.appendChild(t);
+  setTimeout(()=>t.remove(),10000);
+}
+
+function stopPolling(){
+  clearInterval(pollTimer);
+  document.getElementById('sync-dot').style.display='none';
+}
+
+// ══ SCREENS ══════════════════════════════════════════════════════════════
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
+
+// ══ REGISTER ══════════════════════════════════════════════════════════════
+function updateRoleOpts(){
+  const sel=document.getElementById('r-role');
+  const hint=document.getElementById('role-hint');
+  const hasLeader=users().some(u=>u.role==='leader');
+  const hasSup=users().some(u=>u.role==='supervisor');
+  const memberCount=users().filter(u=>u.role==='member').length;
+  const membersFull=memberCount>=4;
+  Array.from(sel.options).forEach(o=>{
+    if(o.value==='leader'){o.disabled=hasLeader;o.textContent='Team Leader'+(hasLeader?' (taken)':'');}
+    if(o.value==='supervisor'){o.disabled=hasSup;o.textContent='Supervisor'+(hasSup?' (taken)':'');}
+    if(o.value==='member'){o.disabled=membersFull;o.textContent='Team Member'+(membersFull?' (full — 4/4)':'');}
+  });
+  const msgs=[];
+  if(hasLeader) msgs.push('Leader taken');
+  if(hasSup) msgs.push('Supervisor taken');
+  if(membersFull) msgs.push('Members full (4/4)');
+  hint.textContent=msgs.length?msgs.join(' · '):'';
+}
+
+async function step1(){
+  const fn=g('r-fn'),ln=g('r-ln'),em=g('r-em'),un2=g('r-un'),ro=g('r-role'),pw=g('r-pw'),pw2=g('r-pw2');
+  if(!fn||!ln||!em||!un2||!pw){err('e1','Fill all fields.');return;}
+  if(!/\S+@\S+\.\S+/.test(em)){err('e1','Enter a valid email.');return;}
+  if(pw.length<6){err('e1','Password must be 6+ characters.');return;}
+  if(pw!==pw2){err('e1','Passwords do not match.');return;}
+  if(db.users[un2]){err('e1','Username taken.');return;}
+  if(users().find(u=>u.email===em)){err('e1','Email already registered.');return;}
+  if(ro==='leader'&&users().some(u=>u.role==='leader')){err('e1','A leader is already registered.');return;}
+  if(ro==='supervisor'&&users().some(u=>u.role==='supervisor')){err('e1','A supervisor is already registered.');return;}
+  if(ro==='member'&&users().filter(u=>u.role==='member').length>=4){err('e1','Maximum 4 members allowed. The team is full.');return;}
+  reg={firstName:fn,lastName:ln,fullName:fn+' '+ln,email:em,username:un2,role:ro,password:btoa(pw)};
+  otp=String(Math.floor(100000+Math.random()*900000));
+  document.getElementById('em-show').textContent=em;
+  document.getElementById('otp-display').textContent=otp;
+  goStep(2);
+}
+
+async function verifyOTP(){
+  const entered=Array.from(document.querySelectorAll('.otp-box')).map(i=>i.value).join('');
+  if(entered.length<6){err('e2','Enter all 6 digits.');return;}
+  if(entered!==otp){err('e2','Incorrect code. Try again.');return;}
+  setLoading('Creating account...');
+  db.users[reg.username]={...reg,id:uid(),createdAt:td()};
+  await fbSet('users',db.users);
+  hideLoading();
+  goStep(3);
+}
+
+function goStep(n){
+  document.querySelectorAll('.astep').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s'+n).classList.add('on');
+  for(let i=1;i<=3;i++) document.getElementById('d'+i).classList.toggle('on',i<=n);
+}
+function on(el,i){el.value=el.value.replace(/\D/,'');if(el.value){const all=document.querySelectorAll('.otp-box');if(i<5)all[i+1].focus();}}
+function ob(e,el,i){if(e.key==='Backspace'&&!el.value&&i>0)document.querySelectorAll('.otp-box')[i-1].focus();}
+
+function launchApp(){
+  document.getElementById('sc-login').classList.add('hidden');
+  document.getElementById('sc-reg').classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  document.getElementById('s-role').textContent=rl(cu.role);
+  document.getElementById('s-name').textContent=cu.fullName;
+  document.getElementById('s-email').textContent=cu.email;
+  document.getElementById('ni-settings').style.display=canEdit()?'flex':'none';
+  initEJS();
+  startPolling();
+  startDeadlineChecker();
+  renderAll();
+  // restore theme
+  const t=localStorage.getItem('cap_theme');
+  if(t==='light'){document.body.classList.add('light');document.getElementById('theme-btn').textContent='☀';}
+  // init simulation
+  initSimulation();
+}
+
+// ══ LOGIN ══════════════════════════════════════════════════════════════
+async function login(){
+  const un2=g('l-un'),pw=g('l-pw');
+  if(!un2||!pw){err('le','Enter username and password.');return;}
+  const btn=document.getElementById('login-btn');
+  btn.disabled=true; btn.textContent='Signing in...';
+  const data=await fbGet('');
+  if(data){
+    db.users=data.users||{};
+    db.meetings=data.meetings||{};
+    db.tasks=data.tasks||{};
+    db.papers=data.papers||{};
+    db.notes=data.notes||{};
+    db.notifs=data.notifs||{};
+    db.reports=data.reports||{};
+    db.online=data.online||{};
+  }
+  btn.disabled=false; btn.textContent='Sign In →';
+  const u=db.users[un2];
+  if(!u||u.password!==btoa(pw)){err('le','Incorrect username or password.');return;}
+  cu=u;
+  sessionStorage.setItem('cap_user',cu.username);
+  launchApp();
+}
+
+function logout(){
+  stopPolling();
+  sessionStorage.removeItem('cap_user');
+  cu=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('l-pw').value='';
+  document.getElementById('le').style.display='none';
+  show('sc-login');
+}
+
+// ══ NAV ══════════════════════════════════════════════════════════════
+function go(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  const pg=document.getElementById('pg-'+page);
+  if(pg) pg.classList.add('on');
+  el.classList.add('on');
+  clearBadge(page);
+  rp(page);
+  // close mobile sidebar after nav
+  if(window.innerWidth<=768) closeSidebar();
+}
+
+function renderAll(){['dashboard','members','meetings','tasks','papers','notes','report'].forEach(rp);renderNotifs();}
+function rp(p){
+  if(p==='dashboard') rDash();
+  if(p==='members') rMem();
+  if(p==='meetings') rMtg();
+  if(p==='tasks') rTsk();
+  if(p==='papers') rPap();
+  if(p==='analytics') rAna();
+  if(p==='notes') rNotes();
+  if(p==='report') rReport();
+  if(p==='simulation') initSimulation();
+  if(p==='settings') loadEJSSettings();
+}
+
+// ══ CHARTS ══════════════════════════════════════════════════════════════
+const cOpts={responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#7BA3C0',font:{family:'Outfit',size:11}}}},scales:{x:{ticks:{color:'#3D6880',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(46,159,223,0.05)'}},y:{ticks:{color:'#3D6880',font:{size:10}},grid:{color:'rgba(46,159,223,0.05)'}}}};
+function mkC(id,type,data,opts={}){
+  if(CHS[id]) CHS[id].destroy();
+  const ctx=document.getElementById(id)?.getContext('2d');
+  if(!ctx) return;
+  CHS[id]=new Chart(ctx,{type,data,options:{...cOpts,...opts,responsive:true,maintainAspectRatio:true}});
+}
+
+// ══ DASHBOARD ══════════════════════════════════════════════════════════
+function rDash(){
+  const T=tasks();
+  const done=T.filter(t=>t.status==='Done').length;
+  document.getElementById('d-stats').innerHTML=`
+    <div class="stat sc"><div class="sl">Tasks</div><div class="sv" style="color:var(--blue2)">${T.length}</div><div class="ss">${done} done</div></div>
+    <div class="stat sg"><div class="sl">Meetings</div><div class="sv" style="color:var(--green)">${meetings().length}</div><div class="ss">Recorded</div></div>
+    <div class="stat sa"><div class="sl">Papers</div><div class="sv" style="color:var(--amber)">${papers().filter(p=>p.reviewStatus==='Approved').length}</div><div class="ss">${papers().length} collected</div></div>
+    <div class="stat sp"><div class="sl">Members</div><div class="sv" style="color:var(--purple)">${users().length}</div><div class="ss">Registered</div></div>`;
+
+  // Group by priority instead of phase (phase removed from task model)
+  const pgroups={High:{tot:0,done:0},Medium:{tot:0,done:0},Low:{tot:0,done:0}};
+  T.forEach(t=>{
+    const g2=t.priority||'Medium';
+    if(!pgroups[g2]) pgroups[g2]={tot:0,done:0};
+    pgroups[g2].tot++;
+    if(t.status==='Done') pgroups[g2].done++;
+  });
+  mkC('c-phase','bar',{
+    labels:Object.keys(pgroups),
+    datasets:[
+      {label:'Done',data:Object.values(pgroups).map(p=>p.done),backgroundColor:'rgba(0,217,126,.55)',borderRadius:4},
+      {label:'Left',data:Object.values(pgroups).map(p=>p.tot-p.done),backgroundColor:'rgba(46,159,223,.25)',borderRadius:4},
+      {label:'Overdue',data:Object.keys(pgroups).map(k=>T.filter(t=>(t.priority||'Medium')===k&&isOverdue(t)).length),backgroundColor:'rgba(255,74,110,.55)',borderRadius:4}
+    ]
+  },{scales:{x:{stacked:false,ticks:{color:'#3D6880',font:{size:11,family:'Outfit'}},grid:{color:'rgba(46,159,223,0.05)'}},y:{ticks:{color:'#3D6880'},grid:{color:'rgba(46,159,223,0.05)'}}},plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11}}}}});
+
+  const papTotal=papers().length;
+  const papApprT=papers().filter(p=>p.reviewStatus==='Approved').length;
+  const pn=Math.min(100,papApprT);
+  mkC('c-papers','doughnut',{labels:['Approved','Remaining'],datasets:[{data:[pn,Math.max(0,100-pn)],backgroundColor:['rgba(155,109,255,.7)','rgba(46,159,223,.1)'],borderWidth:0}]},{cutout:'70%',plugins:{legend:{display:false}},scales:{}});
+
+  const mems=users().filter(u=>u.role!=='supervisor');
+  document.getElementById('d-mem').innerHTML=mems.map(u=>{
+    const mt=T.filter(t=>t.assignee===u.username||t.assignee==='all');
+    const md=mt.filter(t=>t.status==='Done').length;
+    const mp=papers().filter(p=>p.addedby===u.username).length;
+    const pct=mt.length?Math.round(md/mt.length*100):0;
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px">
+        <div class="av" style="width:28px;height:28px;font-size:10px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div>
+        <div style="flex:1"><div style="font-weight:600;font-size:13px">${u.fullName}</div><div style="font-size:11px;color:var(--text3)">${md}/${mt.length} tasks · ${mp} papers</div></div>
+      </div>
+      <div class="prog"><div class="pf" style="width:${pct}%;background:${pct===100?'var(--green)':'var(--blue2)'}"></div></div>
+    </div>`;
+  }).join('');
+
+  const acts=[];
+  meetings().slice(0,2).forEach(m=>acts.push({t:'Meeting: '+m.date,s:m.type,c:'var(--teal)'}));
+  T.filter(t=>t.status==='Done').slice(-2).forEach(t=>acts.push({t:'Done: '+t.desc.slice(0,38),s:un(t.assignee),c:'var(--green)'}));
+  papers().slice(-2).forEach(p=>acts.push({t:'Paper: '+p.title.slice(0,36),s:un(p.addedby),c:'var(--purple)'}));
+  document.getElementById('d-act').innerHTML=acts.length
+    ?acts.map(a=>`<div class="tl-i"><div class="tl-d" style="background:${a.c}"></div><div><div style="font-size:13px;font-weight:500">${a.t}</div><div style="font-size:11px;color:var(--text3)">${a.s}</div></div></div>`).join('')
+    :'<div style="color:var(--text3);font-size:13px">No activity yet.</div>';
+}
+
+// ══ MEMBERS ══════════════════════════════════════════════════════════════
+function rMem(){
+  const T=tasks(); const P=papers(); const M=meetings();
+  const rows=users().map(u=>{
+    const mt=T.filter(t=>t.assignee===u.username||t.assignee==='all');
+    const md=mt.filter(t=>t.status==='Done').length;
+    const mp=P.filter(p=>p.addedby===u.username).length;
+    const mpApproved=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length;
+    const att=M.filter(m=>m.attendance&&m.attendance[u.username]).length;
+    return `<tr style="cursor:pointer" onclick="openMemberProfile('${u.username}')">
+      <td><div style="display:flex;align-items:center;gap:9px">
+        <div style="position:relative">
+          <div class="av" style="width:30px;height:30px;font-size:11px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div>
+          <span class="online-dot ${isOnline(u.username)?'online-green':'online-yellow'}" style="position:absolute;bottom:0;right:0;border:2px solid var(--bg2)"></span>
+        </div>
+        <div><div style="font-weight:600">${u.fullName}</div><div style="font-size:11px;color:var(--text3)">@${u.username} · <span style="color:${isOnline(u.username)?'var(--green)':'var(--text3)'}">${lastSeenText(u.username)}</span></div></div>
+      </div></td>
+      <td style="font-size:12px;color:var(--text2)">${u.email}</td>
+      <td><span class="b bT">${rl(u.role)}</span></td>
+      <td>${md}/${mt.length}</td>
+      <td>${att}/${M.length}</td>
+      <td><span style="color:var(--purple);font-weight:600">${mp}</span> <span style="font-size:11px;color:var(--text3)">(${mpApproved} approved)</span></td>
+      <td style="font-size:11px;color:var(--text3)">${u.createdAt}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('t-mem').innerHTML=`<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Tasks done</th><th>Meetings</th><th>Papers</th><th>Joined</th></tr></thead><tbody>${rows||er(7)}</tbody>`;
+  renderCompetition();
+}
+
+function renderCompetition(){
+  const P=papers();
+  // exclude supervisor from competition
+  const allMems=users().filter(u=>u.role!=='supervisor');
+  const sorted=[...allMems].sort((a,b)=>P.filter(p=>p.addedby===b.username&&p.reviewStatus==='Approved').length - P.filter(p=>p.addedby===a.username&&p.reviewStatus==='Approved').length);
+  const totalApproved=P.filter(p=>p.reviewStatus==='Approved').length;
+  const medals=['🥇','🥈','🥉'];
+  const goal=100;
+  let html=`<div style="margin-bottom:12px">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">Approved papers towards 100 goal</div>
+    <div class="prog"><div class="pf" style="width:${Math.min(100,totalApproved)}%;background:var(--purple)"></div></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:4px">${totalApproved}/100 approved papers</div>
+  </div>`;
+  if(totalApproved>=goal){
+    html+=`<div style="background:linear-gradient(135deg,rgba(155,109,255,.2),rgba(0,201,177,.1));border:1px solid var(--purple);border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">
+      <div style="font-size:24px;margin-bottom:6px">🎉</div>
+      <div style="font-size:16px;font-weight:700;color:var(--purple)">100 Approved Papers Goal Reached!</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px">Congratulations to the entire team — Project #37 literature survey complete!</div>
+    </div>`;
+  }
+  html+=`<table style="width:100%;border-collapse:collapse">
+    <thead><tr>
+      <th style="text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Rank</th>
+      <th style="text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Member</th>
+      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Approved</th>
+      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Added</th>
+      <th style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)">Milestones</th>
+    </tr></thead><tbody>`;
+  sorted.forEach((u,i)=>{
+    const approved=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length;
+    const added=P.filter(p=>p.addedby===u.username).length;
+    const medal=medals[i]||'';
+    const isTop=i===0&&approved>0;
+    const ms20added=added>=20?'<span style="font-size:11px" title="20 collected">📚</span>':'';
+    const ms20appr=approved>=20?'<span style="font-size:11px" title="20 approved">✅</span>':'';
+    html+=`<tr style="${isTop?'background:rgba(155,109,255,.06)':''}">
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-size:16px">${medal||'#'+(i+1)}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="position:relative"><div class="av" style="width:24px;height:24px;font-size:9px;background:${uc(u.username)}22;color:${uc(u.username)}">${ini(u.fullName)}</div><span class="online-dot ${isOnline(u.username)?'online-green':'online-yellow'}" style="position:absolute;bottom:-1px;right:-1px;border:1px solid var(--bg2)"></span></div>
+          <span style="font-size:13px;font-weight:${isTop?'700':'500'}">${u.fullName}</span>
+          ${isTop?'<span class="b bR" style="font-size:10px">Leader 👑</span>':''}
+        </div>
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-family:JetBrains Mono,monospace;font-size:14px;color:var(--purple);font-weight:600">${approved}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-size:13px;color:var(--text2)">${added}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-size:16px">${ms20added}${ms20appr}</td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  // congratulations banners
+  const congrats20=sorted.filter(u=>P.filter(p=>p.addedby===u.username).length>=20);
+  const congrats20appr=sorted.filter(u=>P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length>=20);
+  if(congrats20.length>0||congrats20appr.length>0){
+    html+='<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">';
+    congrats20.forEach(u=>{html+=`<div style="background:rgba(0,217,126,.08);border:1px solid rgba(0,217,126,.2);border-radius:9px;padding:10px 14px;font-size:13px">🎉 <b>${u.fullName}</b> reached <span style="color:var(--green)">20 papers collected!</span></div>`;});
+    congrats20appr.forEach(u=>{html+=`<div style="background:rgba(155,109,255,.08);border:1px solid rgba(155,109,255,.2);border-radius:9px;padding:10px 14px;font-size:13px">⭐ <b>${u.fullName}</b> reached <span style="color:var(--purple)">20 papers approved!</span></div>`;});
+    html+='</div>';
+  }
+  document.getElementById('competition-board').innerHTML=html;
+}
+
+function openMemberProfile(username){
+  const u=db.users[username]; if(!u) return;
+  const T=tasks(); const P=papers(); const M=meetings();
+  const mt=T.filter(t=>t.assignee===u.username||t.assignee==='all');
+  const done=mt.filter(t=>t.status==='Done').length;
+  const review=mt.filter(t=>t.status==='Under Review').length;
+  const rejected=mt.filter(t=>t.status==='Rejected').length;
+  const pending=mt.filter(t=>t.status==='Pending'||t.status==='In Progress').length;
+  const overdue=mt.filter(t=>isOverdue(t)&&t.status!=='Done').length;
+  const att=M.filter(m=>m.attendance&&m.attendance[u.username]).length;
+  const missed=M.length-att;
+  const papAll=P.filter(p=>p.addedby===u.username).length;
+  const papApproved=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length;
+  const papRej=P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Rejected').length;
+  const papPend=papAll-papApproved-papRej;
+  const cid='chart-member-'+username;
+
+  document.getElementById('member-profile-body').innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div class="av" style="width:52px;height:52px;font-size:18px;background:${uc(username)}22;color:${uc(username)}">${ini(u.fullName)}</div>
+      <div>
+        <div style="font-size:20px;font-weight:800">${u.fullName}</div>
+        <div style="font-size:13px;color:var(--text2)">@${u.username} · ${u.email}</div>
+        <span class="b bT" style="margin-top:4px;display:inline-block">${rl(u.role)}</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Tasks done</div>
+        <div style="font-size:26px;font-weight:700;color:var(--green);font-family:JetBrains Mono,monospace">${done}</div>
+        <div style="font-size:11px;color:var(--text3)">of ${mt.length}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Attendance</div>
+        <div style="font-size:26px;font-weight:700;color:var(--teal);font-family:JetBrains Mono,monospace">${att}</div>
+        <div style="font-size:11px;color:var(--text3)">of ${M.length}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Papers approved</div>
+        <div style="font-size:26px;font-weight:700;color:var(--purple);font-family:JetBrains Mono,monospace">${papApproved}</div>
+        <div style="font-size:11px;color:var(--text3)">of ${papAll} added</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Overdue tasks</div>
+        <div style="font-size:26px;font-weight:700;color:${overdue>0?'var(--red)':'var(--text2)'};font-family:JetBrains Mono,monospace">${overdue}</div>
+        <div style="font-size:11px;color:var(--text3)">past deadline</div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg3);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Performance overview</div>
+      <canvas id="${cid}" style="max-height:220px"></canvas>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn bo" onclick="cm('mo-member')">Close</button>
+    </div>`;
+
+  om('mo-member');
+
+  // Draw chart after modal opens
+  setTimeout(()=>{
+    if(CHS[cid]) CHS[cid].destroy();
+    const ctx=document.getElementById(cid)?.getContext('2d');
+    if(!ctx) return;
+    CHS[cid]=new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:['Tasks Done','Tasks Pending','Tasks Overdue','Meetings Attended','Meetings Missed','Papers Approved','Papers Pending','Papers Rejected'],
+        datasets:[{
+          data:[done,pending,overdue,att,missed,papApproved,papPend,papRej],
+          backgroundColor:[
+            'rgba(0,217,126,.65)','rgba(255,171,0,.55)','rgba(255,74,110,.65)',
+            'rgba(0,201,177,.65)','rgba(255,74,110,.55)',
+            'rgba(155,109,255,.65)','rgba(255,171,0,.45)','rgba(255,74,110,.45)'
+          ],
+          borderRadius:5
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:true,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:'#3D6880',font:{size:10,family:'Outfit'}},grid:{color:'rgba(46,159,223,0.05)'}},
+          y:{ticks:{color:'#3D6880',stepSize:1},grid:{color:'rgba(46,159,223,0.05)'}}
+        }
+      }
+    });
+  },100);
+}
+
+// ══ MEETINGS ══════════════════════════════════════════════════════════════
+function rMtg(){
+  document.getElementById('mtg-btn').innerHTML=canEdit()?`<button class="btn bp" onclick="openMtg()">+ Add Meeting</button>`:'';
+  document.getElementById('att').innerHTML=users().map(u=>`<label style="display:flex;align-items:center;gap:7px;margin-bottom:7px;cursor:pointer"><input type="checkbox" id="ac-${u.username}" checked style="width:15px;height:15px;accent-color:var(--blue2)"><span>${u.fullName}</span></label>`).join('');
+  const rows=meetings().map(m=>{
+    const badges=users().map(u=>`<span class="b ${m.attendance?.[u.username]?'bD':'bm'}" style="margin-right:3px">${u.fullName.split(' ')[0]} ${m.attendance?.[u.username]?'✓':'✗'}</span>`).join('');
+    const del=canEdit()?`<button class="btn bsm bd" onclick="delMtg('${m.id}')">Del</button>`:'';
+    return `<tr><td><span class="b bB">${m.date}</span></td><td style="font-size:12px">${m.type}</td><td style="font-size:12px;color:var(--text2);max-width:200px">${m.agenda||'—'}</td><td>${badges}</td><td>${del}</td></tr>`;
+  }).join('');
+  document.getElementById('t-mtg').innerHTML=`<thead><tr><th>Date</th><th>Type</th><th>Minutes</th><th>Attendance</th><th></th></tr></thead><tbody>${rows||er(5)}</tbody>`;
+}
+function openMtg(){document.getElementById('m-dt').value='';document.getElementById('m-ag').value='';om('mo-mtg');}
+async function saveMtg(){
+  const date=g('m-dt'),type=g('m-ty'),agenda=g('m-ag');
+  if(!date){alert('Select date.');return;}
+  const attendance={};
+  users().forEach(u=>{attendance[u.username]=document.getElementById('ac-'+u.username)?.checked||false;});
+  const id=uid();
+  db.meetings[id]={id,date,type,agenda,attendance};
+  await fbSet('meetings',db.meetings);
+  cm('mo-mtg'); renderAll();
+  pushNotif('Meeting recorded: '+date,'Meeting on '+date+' has been recorded.',null,'meeting');
+}
+async function delMtg(id){if(!confirm('Delete?'))return;delete db.meetings[id];await fbSet('meetings',db.meetings);renderAll();}
+
+// ══ TASKS ══════════════════════════════════════════════════════════════
+// ══ DATETIME HELPERS ════════════════════════════════════════════════════════
+function dtNow(){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+function fmtDt(dateStr,timeStr){
+  if(!dateStr) return '—';
+  const t=timeStr||'23:59';
+  const d=new Date(dateStr+'T'+t);
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function isOverdue(task){
+  if(!task.deadline) return false;
+  if(task.status==='Done') return false;
+  const dl=new Date(task.deadline+'T'+(task.deadlineTime||'23:59'));
+  return new Date()>dl;
+}
+
+// ══ DEADLINE CHECKER ════════════════════════════════════════════════════════
+let deadlineTimer=null;
+function startDeadlineChecker(){
+  if(deadlineTimer) clearInterval(deadlineTimer);
+  deadlineTimer=setInterval(checkDeadlines,60000);
+  checkDeadlines();
+}
+async function checkDeadlines(){
+  const now=new Date(); let changed=false;
+  tasks().forEach(t=>{
+    if((t.status==='Pending'||t.status==='In Progress')&&t.deadline){
+      const dl=new Date(t.deadline+'T'+(t.deadlineTime||'23:59'));
+      if(now>dl&&!t.overdueNotified){
+        db.tasks[t.id].overdueNotified=true; changed=true;
+        users().filter(u=>u.role==='leader'||u.role==='supervisor').forEach(u=>{
+          pushNotif('Overdue: '+t.desc.slice(0,40),`Assigned to ${un(t.assignee)} — deadline: ${fmtDt(t.deadline,t.deadlineTime)}`,u.username,'overdue');
+          sendMail(u,'Task overdue: '+t.desc,`Hi ${u.fullName},\n\nTask overdue:\n\n"${t.desc}"\nAssigned to: ${un(t.assignee)}\nDeadline: ${fmtDt(t.deadline,t.deadlineTime)}\nStatus: ${t.status}\n\n— Capstone Hub`);
+        });
+        const targets=t.assignee==='all'?users():users().filter(u=>u.username===t.assignee);
+        targets.filter(u=>u.role==='member').forEach(u=>{
+          pushNotif('Your task is overdue!',`"${t.desc}" — deadline: ${fmtDt(t.deadline,t.deadlineTime)}`,u.username,'overdue');
+        });
+      }
+    }
+  });
+  if(changed) await fbSet('tasks',db.tasks);
+}
+
+// ══ EXTEND DEADLINE ════════════════════════════════════════════════════════
+let extendTaskId=null;
+function openExtend(tid){
+  extendTaskId=tid;
+  const t=db.tasks[tid];
+  document.getElementById('ext-task-name').textContent=t.desc;
+  document.getElementById('ext-dl').value=t.deadline||'';
+  document.getElementById('ext-tm').value=t.deadlineTime||'23:59';
+  om('mo-extend');
+}
+async function saveExtend(){
+  const dl=document.getElementById('ext-dl').value;
+  const tm=document.getElementById('ext-tm').value;
+  if(!dl){alert('Select a new deadline date.');return;}
+  db.tasks[extendTaskId].deadline=dl;
+  db.tasks[extendTaskId].deadlineTime=tm;
+  db.tasks[extendTaskId].overdueNotified=false;
+  await fbSet('tasks',db.tasks);
+  cm('mo-extend'); rTsk();
+  const t=db.tasks[extendTaskId];
+  const targets=t.assignee==='all'?users():users().filter(u=>u.username===t.assignee);
+  targets.forEach(u=>{
+    pushNotif('Deadline extended: '+t.desc.slice(0,40),'New deadline: '+fmtDt(dl,tm),u.username,'extend');
+    sendMail(u,'Deadline extended',`Hi ${u.fullName},\n\nDeadline extended for:\n"${t.desc}"\n\nNew deadline: ${fmtDt(dl,tm)}\n\n— ${cu.fullName}`);
+  });
+}
+
+function rTsk(){
+  document.getElementById('tsk-btn').innerHTML=canEdit()?`<button class="btn bp" onclick="openTsk()">+ Assign Task</button>`:'';
+  document.getElementById('t-wh').innerHTML=`<option value="all">All members</option>`+users().filter(u=>u.role!=='supervisor').map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('');
+  const myT=cu.role==='supervisor'?tasks():canEdit()?tasks():tasks().filter(t=>t.assignee===cu.username||t.assignee==='all');
+  const rows=myT.map(t=>{
+    const overdue=isOverdue(t);
+    const sb=t.status==='Done'?'bD':t.status==='In Progress'?'bI':t.status==='Under Review'?'bR':t.status==='Rejected'?'bRej':'bP';
+    const pb=t.priority==='High'?'bH':t.priority==='Medium'?'bMe':'bL';
+    const dlDisplay=t.deadline?`<span style="color:${overdue?'var(--red)':'var(--text2)'};font-size:12px">${fmtDt(t.deadline,t.deadlineTime)}${overdue?' ⚠':''}</span>`:'—';
+    let act='';
+    if(canEdit()){
+      act=`<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+        <select onchange="setTskSt('${t.id}',this.value)" style="padding:5px 8px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:12px;font-family:'Outfit',sans-serif">
+          <option ${t.status==='Pending'?'selected':''}>Pending</option>
+          <option ${t.status==='In Progress'?'selected':''}>In Progress</option>
+          <option ${t.status==='Under Review'?'selected':''}>Under Review</option>
+          <option ${t.status==='Done'?'selected':''}>Done</option>
+          <option ${t.status==='Rejected'?'selected':''}>Rejected</option>
+        </select>
+        ${t.status==='Under Review'?`<button class="btn bsm bs" onclick="openReview('task','${t.id}')">Review ▸</button>`:''}
+        <button class="btn bsm bo" onclick="openExtend('${t.id}')" title="Extend deadline">⏱</button>
+        <button class="btn bsm bd" onclick="delTsk('${t.id}')">✕</button>
+      </div>`;
+    } else if(t.assignee===cu.username||t.assignee==='all'){
+      if(overdue){
+        act=`<span style="font-size:11px;color:var(--red)">⚠ Overdue — contact leader to extend</span>`;
+      } else if(t.status==='Pending'||t.status==='In Progress'){
+        act=overdue
+          ? `<span style="font-size:11px;color:var(--red)">⚠ Overdue — contact leader to extend</span>`
+          : `<button class="btn bsm bs" onclick="setTskSt('${t.id}','Under Review')">Submit for review</button>`;
+      } else if(t.status==='Under Review'){
+        act=`<span style="font-size:11px;color:var(--purple)">⏳ Awaiting review</span>`;
+      } else if(t.status==='Done'){
+        act=`<span style="font-size:11px;color:var(--green)">✓ Approved</span>`;
+      } else if(t.status==='Rejected'){
+        act=`<div><span style="font-size:11px;color:var(--red)">✗ ${t.reviewNote||'Rejected'}</span><br><button class="btn bsm bMe" style="margin-top:4px" onclick="setTskSt('${t.id}','In Progress')">Resubmit</button></div>`;
+      }
+    }
+    return `<tr ${overdue&&t.status!=='Done'?'style="background:rgba(255,74,110,.03)"':''}>
+      <td style="font-weight:500;max-width:180px">${t.desc}${overdue&&t.status!=='Done'?'<span class="b bRej" style="margin-left:5px;font-size:10px">Overdue</span>':''}</td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="av" style="width:20px;height:20px;font-size:9px;background:${uc(t.assignee)}22;color:${uc(t.assignee)}">${t.assignee==='all'?'AL':ini(un(t.assignee))}</div><span style="font-size:12px">${un(t.assignee)}</span></div></td>
+      <td><span class="b ${pb}">${t.priority}</span></td>
+      <td>${dlDisplay}</td>
+      <td><span class="b ${sb}">${t.status}</span>${t.reviewNote&&t.status==='Done'?`<div style="font-size:10px;color:var(--text3)">${t.reviewNote}</div>`:''}</td>
+      <td>${act}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('t-tsk').innerHTML=`<thead><tr><th>Task</th><th>Assigned to</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows||er(6)}</tbody>`;
+}
+function openTsk(){
+  document.getElementById('t-ds').value='';
+  document.getElementById('tsk-modal-title').textContent='Assign Task';
+  document.getElementById('tsk-save-btn').onclick=saveTask;
+  document.getElementById('tsk-save-btn').textContent='Assign Task';
+  om('mo-tsk');
+}
+async function saveTask(){
+  const desc=g('t-ds');if(!desc){alert('Enter description.');return;}
+  const assignee=g('t-wh'),priority=g('t-pr'),deadline=g('t-dl'),deadlineTime=g('t-tm')||'23:59';
+  const id=uid();
+  db.tasks[id]={id,desc,assignee,priority,deadline,deadlineTime,status:'Pending',createdAt:dtNow(),by:cu.username};
+  await fbSet('tasks',db.tasks);
+  cm('mo-tsk'); renderAll();
+  const targets=assignee==='all'?users():users().filter(u=>u.username===assignee);
+  targets.forEach(u=>{
+    pushNotif('New task: '+desc.slice(0,40),'Assigned by '+cu.fullName,u.username,'task');
+    sendMail(u,'New task assigned',`Hi ${u.fullName},\n\nNew task assigned:\n\n"${desc}"\n\nPriority: ${priority}\nDeadline: ${fmtDt(deadline,deadlineTime)}\n\n— ${cu.fullName}`);
+  });
+  showBadge('tasks',1);
+}
+async function setTskSt(id,status){
+  db.tasks[id].status=status;
+  if(status==='Under Review'){
+    users().filter(u=>u.role==='leader'||u.role==='supervisor').forEach(u=>{
+      pushNotif('Task submitted for review',db.tasks[id].desc.slice(0,50)+' — by '+un(db.tasks[id].assignee),u.username,'review');
+      sendMail(u,'Task ready for review',`Hi ${u.fullName},\n\n${un(db.tasks[id].assignee)} submitted for review:\n\n"${db.tasks[id].desc}"\n\nDeadline: ${fmtDt(db.tasks[id].deadline,db.tasks[id].deadlineTime)}\n\n— Capstone Hub`);
+    });
+    showBadge('tasks',1);
+  }
+  await fbSet('tasks',db.tasks);rTsk();rDash();
+}
+async function delTsk(id){if(!confirm('Delete task?'))return;delete db.tasks[id];await fbSet('tasks',db.tasks);renderAll();}
+
+// ══ REVIEW MODAL ══════════════════════════════════════════════════════════
+let reviewTarget={type:null,id:null};
+function openReview(type,id){
+  reviewTarget={type,id};
+  const item=type==='task'?db.tasks[id]:db.papers[id];
+  const name=type==='task'?item.desc:item.title;
+  const submittedBy=type==='task'?un(item.assignee):un(item.addedby);
+  document.getElementById('rev-title').textContent=(type==='task'?'Task: ':'Paper: ')+name.slice(0,60);
+  document.getElementById('rev-by').textContent='Submitted by: '+submittedBy;
+  document.getElementById('rev-note').value='';
+  om('mo-review');
+}
+async function submitReview(decision){
+  const note=document.getElementById('rev-note').value.trim();
+  const {type,id}=reviewTarget;
+  if(type==='task'){
+    db.tasks[id].status=decision==='approve'?'Done':'Rejected';
+    db.tasks[id].reviewNote=note;
+    db.tasks[id].reviewBy=cu.username;
+    db.tasks[id].reviewDate=td();
+    await fbSet('tasks',db.tasks);
+    const assignee=db.tasks[id].assignee;
+    const targets=assignee==='all'?users():users().filter(u=>u.username===assignee);
+    targets.forEach(u=>{
+      const msg=decision==='approve'?'Your task was approved!':'Your task was rejected'+(note?': '+note:'.');
+      pushNotif(decision==='approve'?'Task approved ✓':'Task rejected ✗',msg,u.username,'review');
+      sendMail(u,decision==='approve'?'Task approved':'Task rejected',`Hi ${u.fullName},\n\n${cu.fullName} has ${decision==='approve'?'approved':'rejected'} your task:\n\n"${db.tasks[id].desc}"${note?'\n\nNote: '+note:''}\n\n— Capstone Hub`);
+    });
+    rTsk();
+  } else {
+    db.papers[id].reviewStatus=decision==='approve'?'Approved':'Rejected';
+    db.papers[id].reviewNote=note;
+    db.papers[id].reviewBy=cu.username;
+    db.papers[id].reviewDate=td();
+    await fbSet('papers',db.papers);
+    const addedby=db.papers[id].addedby;
+    const u=users().find(u=>u.username===addedby);
+    if(u){
+      const msg=decision==='approve'?'Your paper was approved!':'Your paper was rejected'+(note?': '+note:'.');
+      pushNotif(decision==='approve'?'Paper approved ✓':'Paper rejected ✗',msg,u.username,'review');
+      sendMail(u,decision==='approve'?'Paper approved':'Paper rejected',`Hi ${u.fullName},\n\n${cu.fullName} has ${decision==='approve'?'approved':'rejected'} your paper:\n\n"${db.papers[id].title}"${note?'\n\nNote: '+note:''}\n\n— Capstone Hub`);
+    }
+    rPap();
+  }
+  cm('mo-review');
+  rDash();
+}
+
+// ══ PAPERS ══════════════════════════════════════════════════════════════
+const PAP_PER_PAGE=10;
+function rPap(){
+  const allP=papers();
+  const n=allP.length;
+  const approvedN=allP.filter(p=>p.reviewStatus==='Approved').length;
+  document.getElementById('pc').textContent=n;
+  const pcApproved=document.getElementById('pc-approved');
+  if(pcApproved) pcApproved.textContent=approvedN;
+  document.getElementById('pp').style.width=Math.min(100,approvedN)+'%';
+  const totalPages=Math.max(1,Math.ceil(n/PAP_PER_PAGE));
+  if(papPage>=totalPages) papPage=totalPages-1;
+  const start=papPage*PAP_PER_PAGE;
+  const paginated=allP.slice(start,start+PAP_PER_PAGE);
+  const rows=paginated.map((p,pi)=>{
+    const globalIdx=start+pi+1;
+    const rb=p.relevance==='High'?'bM':p.relevance==='Medium'?'bMo':'bm';
+    const nc=(p.paperNotes||[]).length;
+    const nb=nc>0?`<span class="b bB" style="margin-left:5px">${nc} note${nc>1?'s':''}</span>`:'';
+    const rs=p.reviewStatus==='Approved'?'<span class="b bD">Approved</span>':p.reviewStatus==='Rejected'?'<span class="b bRej">Rejected</span>':'<span class="b bP">Pending</span>';
+    const reviewBtn=canEdit()?`<span onclick="event.stopPropagation();openReview('paper','${p.id}')" class="b bR" style="cursor:pointer;margin-left:4px">Review ▸</span>`:'';
+    const canEditPaper=canEdit()||p.addedby===cu.username;
+    const editBtn=canEditPaper?`<button class="btn bsm bo" onclick="event.stopPropagation();openEditPaper('${p.id}')" style="margin-left:3px">Edit</button>`:'';
+    const delBtn=canEditPaper?`<button class="btn bsm bd" onclick="event.stopPropagation();delPaperFull('${p.id}')" style="margin-left:3px">x</button>`:'';
+    return `<tr style="cursor:pointer" onclick="openPaper('${p.id}')">
+      <td style="color:var(--text3);font-size:11px;width:28px">${globalIdx}</td>
+      <td style="font-weight:600;font-size:13px">${p.title}${nb}</td>
+      <td style="font-size:11px;color:var(--text2)">${p.authors||'-'}</td>
+      <td style="font-size:11px">${p.journal||'-'}</td>
+      <td style="font-size:11px;color:var(--text2)">${p.domain||'-'}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:120px">${p.finding||'-'}</td>
+      <td style="font-size:11px">${p.method||'-'}</td>
+      <td><span class="b ${rb}">${p.relevance}</span></td>
+      <td><div style="display:flex;align-items:center;gap:5px"><div class="av" style="width:18px;height:18px;font-size:8px;background:${uc(p.addedby)}22;color:${uc(p.addedby)}">${ini(un(p.addedby))}</div><span style="font-size:11px">${un(p.addedby)}</span></div></td>
+      <td style="font-size:10px;color:var(--text3)">${p.date}</td>
+      <td style="white-space:nowrap">${rs}${reviewBtn}${editBtn}${delBtn}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('t-pap').innerHTML=`<thead><tr><th>#</th><th>Title</th><th>Authors</th><th>Journal</th><th>Domain</th><th>Finding</th><th>Method</th><th>Rel.</th><th>By</th><th>Date</th><th>Review</th></tr></thead><tbody>${rows||er(11)}</tbody>`;
+  document.getElementById('pap-pagination').innerHTML=`<div class="pag">
+    <button class="pag-btn" onclick="setPapPage(0)" ${papPage===0?'disabled':''}>First</button>
+    <button class="pag-btn" onclick="setPapPage(${papPage-1})" ${papPage===0?'disabled':''}>‹ Prev</button>
+    <span class="pag-info">Page ${papPage+1} of ${totalPages} &nbsp;·&nbsp; ${n} papers &nbsp;·&nbsp; ${approvedN} approved</span>
+    <button class="pag-btn" onclick="setPapPage(${papPage+1})" ${papPage>=totalPages-1?'disabled':''}>Next ›</button>
+    <button class="pag-btn" onclick="setPapPage(${totalPages-1})" ${papPage>=totalPages-1?'disabled':''}>Last</button>
+  </div>`;
+}
+function setPapPage(n){papPage=n;rPap();}
+function openEditPaper(pid){
+  editPapId=pid;
+  const p=db.papers[pid];
+  document.getElementById('ep-ti').value=p.title||'';
+  document.getElementById('ep-au').value=p.authors||'';
+  document.getElementById('ep-jo').value=p.journal||'';
+  document.getElementById('ep-do').value=p.domain||'';
+  document.getElementById('ep-fi').value=p.finding||'';
+  document.getElementById('ep-me').value=p.method||'';
+  document.getElementById('ep-re').value=p.relevance||'High';
+  document.getElementById('ep-li').value=p.link||'';
+  document.getElementById('ep-no').value=p.notes||'';
+  om('mo-edit-paper');
+}
+async function saveEditPaper(){
+  if(!editPapId) return;
+  const p=db.papers[editPapId];
+  const newTitle=document.getElementById('ep-ti').value.trim();
+  if(!newTitle){alert('Title cannot be empty.');return;}
+  if(newTitle.toLowerCase()!==p.title.toLowerCase()){
+    const dup=papers().find(x=>x.id!==editPapId&&x.title.trim().toLowerCase()===newTitle.toLowerCase());
+    if(dup){alert('Title already used by '+un(dup.addedby)+'.');return;}
+  }
+  db.papers[editPapId]={...p,title:newTitle,authors:document.getElementById('ep-au').value,journal:document.getElementById('ep-jo').value,domain:document.getElementById('ep-do').value,finding:document.getElementById('ep-fi').value,method:document.getElementById('ep-me').value,relevance:document.getElementById('ep-re').value,link:document.getElementById('ep-li').value,notes:document.getElementById('ep-no').value,reviewStatus:'Pending',reviewNote:'',reviewBy:'',reviewDate:'',editedAt:dtNow(),editedBy:cu.username};
+  await fbSet('papers',db.papers);
+  // notify leader/supervisor that paper was re-submitted
+  users().filter(u=>u.role==='leader'||u.role==='supervisor').forEach(u=>{
+    if(u.username!==cu.username){
+      pushNotif('Paper re-submitted: '+newTitle.slice(0,40),'Edited by '+cu.fullName+' — needs review',u.username,'review');
+      sendMail(u,'Paper edited — needs re-review',`Hi ${u.fullName},\n\n${cu.fullName} edited a paper and it needs re-review:\n\n"${newTitle}"\n\n— Capstone Hub`);
+    }
+  });
+  cm('mo-edit-paper');rPap();
+}
+
+function openPaper(pid){
+  const p=db.papers[pid];
+  if(!p) return;
+  const canEditPaper=canEdit()||p.addedby===cu.username;
+  const rb=p.relevance==='High'?'bM':p.relevance==='Medium'?'bMo':'bm';
+  const pnotes=p.paperNotes||[];
+
+  document.getElementById('pmod-body').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div style="flex:1">
+        <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px">${p.title}</div>
+        <div style="font-size:13px;color:var(--text2)">${p.authors||'—'}</div>
+      </div>
+      <span class="b ${rb}" style="font-size:13px;padding:5px 12px;margin-left:12px;flex-shrink:0">${p.relevance}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--bg3);border-radius:9px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Journal</div><div style="font-size:13px">${p.journal||'—'}</div></div>
+      <div style="background:var(--bg3);border-radius:9px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Domain</div><div style="font-size:13px">${p.domain||'—'}</div></div>
+      <div style="background:var(--bg3);border-radius:9px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Key Finding</div><div style="font-size:13px">${p.finding||'—'}</div></div>
+      <div style="background:var(--bg3);border-radius:9px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Method</div><div style="font-size:13px">${p.method||'—'}</div></div>
+    </div>
+    ${p.notes?`<div style="background:var(--bg3);border-radius:9px;padding:12px;margin-bottom:16px"><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">Author Notes</div><div style="font-size:13px;color:var(--text2);line-height:1.7">${p.notes}</div></div>`:''}
+    ${p.link?`<div style="margin-bottom:16px"><a href="${p.link}" target="_blank" style="color:var(--blue2);font-size:13px;font-weight:500">↗ View paper (DOI)</a></div>`:''}
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:12px;color:var(--text3)">
+      <div class="av" style="width:22px;height:22px;font-size:9px;background:${uc(p.addedby)}22;color:${uc(p.addedby)}">${ini(un(p.addedby))}</div>
+      Added by <span style="color:var(--text2);font-weight:500">${un(p.addedby)}</span> on ${p.date}
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Notes on this paper</div>
+      ${pnotes.length===0?'<div style="color:var(--text3);font-size:13px;margin-bottom:14px">No notes yet.</div>':
+        pnotes.map((n,ni)=>`
+        <div style="background:var(--bg3);border-radius:9px;padding:12px;margin-bottom:8px;border-left:3px solid ${n.by===cu.username?'var(--blue2)':'var(--teal)'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:7px">
+              <div class="av" style="width:20px;height:20px;font-size:8px;background:${uc(n.by)}22;color:${uc(n.by)}">${ini(un(n.by))}</div>
+              <span style="font-size:12px;font-weight:600">${un(n.by)}</span>
+              <span class="b ${n.for==='all'?'bT':'bB'}" style="font-size:10px">→ ${n.for==='all'?'All team':un(n.for)}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:10px;color:var(--text3)">${n.date}</span>
+              ${canEdit()||n.by===cu.username?`<button onclick="delPaperNote('${pid}',${ni})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px">✕</button>`:''}
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.6">${n.note}</div>
+        </div>`).join('')
+      }
+      ${canEdit()?`
+      <div style="background:var(--bg4);border-radius:10px;padding:12px;margin-top:8px">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px">Add note on this paper</div>
+        <div class="fg" style="margin-bottom:8px"><label>For</label>
+          <select id="pnote-for" style="padding:8px 10px;border-radius:7px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:13px">
+            <option value="all">All team</option>
+            ${users().map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('')}
+          </select>
+        </div>
+        <textarea id="pnote-txt" placeholder="Write your note about this paper..." style="width:100%;padding:9px 11px;border-radius:8px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;resize:vertical;min-height:65px;outline:none;margin-bottom:8px"></textarea>
+        <button class="btn bp" onclick="addPaperNote('${pid}')">Post Note →</button>
+      </div>`:''}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      ${canEditPaper?`<button class="btn bd" onclick="delPaperFull('${pid}')">Delete Paper</button>`:''}
+      <button class="btn bo" onclick="cm('mo-paper')">Close</button>
+    </div>`;
+  om('mo-paper');
+}
+
+async function addPaperNote(pid){
+  const note=document.getElementById('pnote-txt')?.value?.trim();
+  const forWho=document.getElementById('pnote-for')?.value;
+  if(!note){alert('Write a note first.');return;}
+  if(!db.papers[pid].paperNotes) db.papers[pid].paperNotes=[];
+  db.papers[pid].paperNotes.push({note,for:forWho,by:cu.username,date:td()});
+  await fbSet('papers',db.papers);
+  const recipients=forWho==='all'?users():users().filter(u=>u.username===forWho);
+  recipients.filter(u=>u.username!==cu.username).forEach(u=>{
+    pushNotif('Note on: '+db.papers[pid].title.slice(0,35),note.slice(0,60),u.username,'papernote');
+    sendMail(u,'Note on paper: '+db.papers[pid].title,`Hi ${u.fullName},\n\n${cu.fullName} left a note on:\n"${db.papers[pid].title}"\n\nNote: ${note}\n\n— Capstone Hub`);
+  });
+  openPaper(pid); rPap();
+}
+
+async function delPaperNote(pid,ni){
+  if(!confirm('Delete note?'))return;
+  db.papers[pid].paperNotes.splice(ni,1);
+  await fbSet('papers',db.papers);
+  openPaper(pid); rPap();
+}
+
+async function delPaperFull(pid){
+  if(!confirm('Delete this paper?'))return;
+  delete db.papers[pid];
+  await fbSet('papers',db.papers);
+  cm('mo-paper'); rPap(); rDash();
+}
+
+function downloadExcel(){
+  const allPapers=papers();
+  if(allPapers.length===0){alert('No papers to export yet.');return;}
+
+  const rows=allPapers.map((p,i)=>({
+    '#': i+1,
+    'Title': p.title||'',
+    'Authors & Year': p.authors||'',
+    'Journal / Source': p.journal||'',
+    'Domain / Application': p.domain||'',
+    'Key Finding': p.finding||'',
+    'Method / Approach': p.method||'',
+    'Relevance': p.relevance||'',
+    'DOI / Link': p.link||'',
+    'Added By': un(p.addedby)||'',
+    'Date Added': p.date||'',
+    'Review Status': p.reviewStatus||'Pending',
+    'Review Note': p.reviewNote||'',
+    'Reviewed By': p.reviewBy?un(p.reviewBy):'',
+    'Author Notes': p.notes||''
+  }));
+
+  const ws=XLSX.utils.json_to_sheet(rows);
+
+  // Column widths
+  ws['!cols']=[
+    {wch:4},{wch:45},{wch:22},{wch:22},{wch:22},
+    {wch:35},{wch:20},{wch:12},{wch:30},{wch:18},
+    {wch:12},{wch:14},{wch:30},{wch:16},{wch:35}
+  ];
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Papers Survey');
+
+  // Add a summary sheet
+  const summary=[
+    ['AI Lab Companion — Capstone Project #37'],
+    ['Literature Survey Export'],
+    ['Generated on: '+new Date().toLocaleDateString()],
+    [''],
+    ['Total papers collected:', allPapers.length],
+    ['Target:', 100],
+    ['Progress:', Math.round(allPapers.length/100*100)+'%'],
+    [''],
+    ['Papers by member:'],
+    ...users().map(u=>[u.fullName, allPapers.filter(p=>p.addedby===u.username).length+' papers']),
+    [''],
+    ['Approved papers:', allPapers.filter(p=>p.reviewStatus==='Approved').length],
+    ['Pending review:', allPapers.filter(p=>!p.reviewStatus||p.reviewStatus==='Pending').length],
+    ['Rejected papers:', allPapers.filter(p=>p.reviewStatus==='Rejected').length],
+  ];
+  const ws2=XLSX.utils.aoa_to_sheet(summary);
+  ws2['!cols']=[{wch:30},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Summary');
+
+  XLSX.writeFile(wb,'Papers_Survey_Project37_'+td()+'.xlsx');
+}
+
+function checkDupTitle(val){
+  const warn=document.getElementById('dup-warn');
+  if(!warn) return;
+  if(!val.trim()){warn.style.display='none';return;}
+  const dup=papers().find(p=>p.title.trim().toLowerCase()===val.trim().toLowerCase());
+  if(dup){
+    warn.textContent=`⚠ Already added by ${un(dup.addedby)} on ${dup.date}`;
+    warn.style.display='block';
+  } else {
+    warn.style.display='none';
+  }
+}
+
+async function addPaper(){
+  const title=g('p-ti');if(!title){alert('Enter paper title.');return;}
+  // Check for duplicate title (case-insensitive)
+  const duplicate=papers().find(p=>p.title.trim().toLowerCase()===title.trim().toLowerCase());
+  if(duplicate){
+    const addedBy=un(duplicate.addedby);
+    alert(`This paper is already added by ${addedBy} on ${duplicate.date}.\n\nTitle: "${duplicate.title}"\n\nPlease choose a different paper.`);
+    return;
+  }
+  const id=uid();
+  db.papers[id]={id,title,authors:g('p-au'),journal:g('p-jo'),domain:g('p-do'),finding:g('p-fi'),method:g('p-me'),relevance:g('p-re'),link:g('p-li'),notes:g('p-no'),addedby:cu.username,date:td(),paperNotes:[]};
+  ['p-ti','p-au','p-jo','p-do','p-fi','p-me','p-li','p-no'].forEach(id2=>document.getElementById(id2).value='');
+  await fbSet('papers',db.papers);
+  rPap(); rDash();
+}
+
+// ══ ANALYTICS ══════════════════════════════════════════════════════════
+function rAna(){
+  const T=tasks(); const P=papers(); const M=meetings();
+  const done=T.filter(t=>t.status==='Done').length;
+  const prog=T.filter(t=>t.status==='In Progress').length;
+  const pend=T.filter(t=>t.status==='Pending').length;
+  const review=T.filter(t=>t.status==='Under Review').length;
+  const rejected=T.filter(t=>t.status==='Rejected').length;
+  const overdue=T.filter(t=>isOverdue(t)&&t.status!=='Done').length;
+
+  // 1. Task status doughnut — now includes Under Review + purple
+  mkC('c-status','doughnut',{
+    labels:['Done','In Progress','Under Review','Rejected','Pending'],
+    datasets:[{
+      data:[done,prog,review,rejected,pend],
+      backgroundColor:['rgba(0,217,126,.65)','rgba(255,171,0,.65)','rgba(155,109,255,.65)','rgba(255,74,110,.65)','rgba(61,104,128,.4)'],
+      borderWidth:0,hoverOffset:5
+    }]
+  },{cutout:'58%',plugins:{legend:{position:'right',labels:{color:'#7BA3C0',font:{size:11,family:'Outfit'}}}},scales:{}});
+
+  const mems=users().filter(u=>u.role!=='supervisor');
+
+  // 2. Attendance — blue attended + red missed, full names
+  mkC('c-att','bar',{
+    labels:mems.map(u=>u.fullName),
+    datasets:[
+      {label:'Attended',data:mems.map(u=>M.filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:'rgba(46,159,223,.7)',borderRadius:4},
+      {label:'Missed',data:mems.map(u=>M.length-M.filter(m=>m.attendance&&m.attendance[u.username]).length),backgroundColor:'rgba(255,74,110,.65)',borderRadius:4}
+    ]
+  },{plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11,family:'Outfit'}}}}});
+
+  // 3. Approved papers per member only (not all added)
+  mkC('c-pap-mem','bar',{
+    labels:mems.map(u=>u.fullName.split(' ')[0]),
+    datasets:[{
+      label:'Approved papers',
+      data:mems.map(u=>P.filter(p=>p.addedby===u.username&&p.reviewStatus==='Approved').length),
+      backgroundColor:'rgba(155,109,255,.65)',borderRadius:5
+    }]
+  },{plugins:{legend:{display:false}}});
+
+  // 4. Tasks: assigned, done, overdue (red)
+  mkC('c-tsk-mem','bar',{
+    labels:mems.map(u=>u.fullName.split(' ')[0]),
+    datasets:[
+      {label:'Assigned',data:mems.map(u=>T.filter(t=>t.assignee===u.username||t.assignee==='all').length),backgroundColor:'rgba(46,159,223,.45)',borderRadius:4},
+      {label:'Done',data:mems.map(u=>T.filter(t=>(t.assignee===u.username||t.assignee==='all')&&t.status==='Done').length),backgroundColor:'rgba(0,217,126,.55)',borderRadius:4},
+      {label:'Overdue',data:mems.map(u=>T.filter(t=>(t.assignee===u.username||t.assignee==='all')&&isOverdue(t)).length),backgroundColor:'rgba(255,74,110,.65)',borderRadius:4}
+    ]
+  },{plugins:{legend:{labels:{color:'#7BA3C0',font:{size:11,family:'Outfit'}}}}});
+
+  // 5. Weekly line
+  const weeks=[],now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i*7);weeks.push(d.toISOString().slice(0,10));}
+  mkC('c-week','line',{
+    labels:weeks.map(w=>w.slice(5)),
+    datasets:[{label:'Tasks done',data:weeks.map((w,i)=>T.filter(t=>t.status==='Done'&&t.createdAt>=w&&t.createdAt<(weeks[i+1]||'9999')).length),borderColor:'var(--blue2)',backgroundColor:'rgba(46,159,223,.1)',fill:true,tension:.4,pointBackgroundColor:'var(--blue2)'}]
+  },{plugins:{legend:{display:false}},elements:{point:{radius:4}}});
+}
+
+// ══ NOTES ══════════════════════════════════════════════════════════════
+function rNotes(){
+  document.getElementById('note-form').innerHTML=canEdit()?`<div class="card"><div class="ct">Post note / feedback</div><div class="fgrid"><div class="fg"><label>Title</label><input id="n-ti" placeholder="Note title"></div><div class="fg"><label>For</label><select id="n-fo"><option value="all">All team</option>${users().map(u=>`<option value="${u.username}">${u.fullName}</option>`).join('')}</select></div><div class="fg full"><label>Message</label><textarea id="n-bo" placeholder="Your note or feedback..."></textarea></div></div><button class="btn bp" style="margin-top:6px" onclick="addNote()">Post Note →</button></div>`:'';
+  const myN=notes().filter(n=>n.for==='all'||n.for===cu.username||canEdit());
+  document.getElementById('note-list').innerHTML=myN.length===0?'<div style="color:var(--text3);text-align:center;padding:28px;font-size:13px">No notes yet.</div>':myN.slice().reverse().map(n=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px">
+        <div><span style="font-weight:700">${n.title}</span> <span style="font-size:11px;color:var(--text3)">→ ${n.for==='all'?'All team':un(n.for)}</span></div>
+        <div style="display:flex;gap:7px;align-items:center">
+          <span class="b bB">${un(n.by)}</span>
+          <span style="font-size:11px;color:var(--text3)">${n.date}</span>
+          ${canEdit()?`<button class="btn bsm bd" onclick="delNote('${n.id}')">Delete</button>`:''}
+        </div>
+      </div>
+      <div style="color:var(--text2);font-size:13px;line-height:1.7">${n.body}</div>
+    </div>`).join('');
+}
+
+async function addNote(){
+  const title=g('n-ti'),body=g('n-bo'),forWho=g('n-fo');
+  if(!title||!body){alert('Fill title and message.');return;}
+  const id=uid();
+  db.notes[id]={id,title,body,for:forWho,by:cu.username,date:dtNow()};
+  await fbSet('notes',db.notes);
+  document.getElementById('n-ti').value=''; document.getElementById('n-bo').value='';
+  rNotes();
+  // notify + email every recipient
+  const recipients=forWho==='all'?users():users().filter(u=>u.username===forWho);
+  recipients.filter(u=>u.username!==cu.username).forEach(u=>{
+    pushNotif('Note from '+cu.fullName+': '+title,body.slice(0,60),u.username,'note');
+    sendMail(u,'New note: '+title,
+      `Hi ${u.fullName},\n\n${cu.fullName} posted a note for you:\n\n"${title}"\n\n${body}\n\nPosted: ${dtNow()}\n\n— Capstone Hub`);
+  });
+  showBadge('notes',1);
+}
+
+async function delNote(id){if(!confirm('Delete note?'))return;delete db.notes[id];await fbSet('notes',db.notes);rNotes();}
+
+// ══ NOTIFICATIONS ══════════════════════════════════════════════════════
+async function pushNotif(title,msg,target,type){
+  if(!target){
+    // push to all
+    users().forEach(u=>{
+      const id=uid();
+      if(!db.notifs[u.username]) db.notifs[u.username]={};
+      db.notifs[u.username][id]={id,title,msg,type,date:td(),read:false};
+    });
+  } else {
+    const id=uid();
+    if(!db.notifs[target]) db.notifs[target]={};
+    db.notifs[target][id]={id,title,msg,type,date:td(),read:false};
+  }
+  await fbSet('notifs',db.notifs);
+  renderNotifs();
+}
+
+function renderNotifs(){
+  const mine=Object.values((db.notifs||{})[cu?.username]||{}).sort((a,b)=>a.date<b.date?1:-1);
+  const unread=mine.filter(n=>!n.read).length;
+  const nc=document.getElementById('nc');
+  if(unread>0){nc.textContent=unread;nc.style.display='inline-flex';}else nc.style.display='none';
+  const items=mine.slice(0,20).map(n=>`
+    <div class="ndi ${n.read?'':'unread'}" style="position:relative">
+      <div class="ndi-t">${n.title}</div>
+      <div class="ndi-s">${n.msg.slice(0,55)}${n.msg.length>55?'...':''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+        <span style="font-size:10px;color:var(--text3)">${n.date}</span>
+        <button onclick="delNotif('${n.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0">✕</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('nl').innerHTML=mine.length===0
+    ?'<div style="color:var(--text3);text-align:center;padding:16px;font-size:13px">All caught up ✓</div>'
+    :`${items}<div style="text-align:center;margin-top:8px"><button onclick="delAllNotifs()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:7px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Outfit,sans-serif">Clear all</button></div>`;
+}
+
+async function delNotif(nid){
+  if(db.notifs?.[cu.username]?.[nid]) delete db.notifs[cu.username][nid];
+  await fbSet('notifs/'+cu.username,db.notifs[cu.username]||{});
+  renderNotifs();
+}
+async function delAllNotifs(){
+  db.notifs[cu.username]={};
+  await fbSet('notifs/'+cu.username,{});
+  renderNotifs();
+}
+
+async function toggleND(){
+  const nd=document.getElementById('ndrop');nd.classList.toggle('open');
+  if(nd.classList.contains('open')){
+    const mine=db.notifs?.[cu.username];
+    if(mine){Object.keys(mine).forEach(k=>{if(mine[k])mine[k].read=true;});await fbSet('notifs/'+cu.username,mine);}
+    renderNotifs();
+  }
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.notif-area'))document.getElementById('ndrop').classList.remove('open');});
+
+// ══ REPORT PAGE ══════════════════════════════════════════════════════════
+function rReport(){
+  const addBtn=document.getElementById('report-add-btn');
+  const addForm=document.getElementById('report-add-form');
+  if(canEdit()){
+    addBtn.innerHTML=`<button class="btn bp" onclick="toggleReportForm()">+ Add Link</button>`;
+    addForm.innerHTML=`<div class="card" id="report-form-card" style="display:none;margin-bottom:14px">
+      <div class="ct">Add report link</div>
+      <div class="fgrid">
+        <div class="fg"><label>Task / Section name</label><input id="rl-name" placeholder="e.g. Literature Review — Capstone I"></div>
+        <div class="fg"><label>Type</label><select id="rl-type"><option>Overleaf</option><option>Google Docs</option><option>GitHub</option><option>Google Drive</option><option>Other</option></select></div>
+        <div class="fg full"><label>Link URL</label><input id="rl-url" placeholder="https://overleaf.com/project/..."></div>
+        <div class="fg full"><label>Notes (optional)</label><input id="rl-note" placeholder="Short description"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn bp" onclick="addReportLink()">Save Link</button>
+        <button class="btn bo" onclick="toggleReportForm()">Cancel</button>
+      </div>
+    </div>`;
+  } else { addBtn.innerHTML=''; addForm.innerHTML=''; }
+
+  const links=Object.values(db.reports||{}).sort((a,b)=>a.date<b.date?1:-1);
+  const icons={'Overleaf':'📄','Google Docs':'📝','GitHub':'💻','Google Drive':'☁','Other':'🔗'};
+  document.getElementById('report-list').innerHTML=links.length===0
+    ?'<div style="color:var(--text3);text-align:center;padding:24px;font-size:13px">No report links added yet.</div>'
+    :links.map(l=>`
+      <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:24px;flex-shrink:0">${icons[l.type]||'🔗'}</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px">${l.name}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:1px">${l.type} · Added by ${un(l.by)} · ${l.date}</div>
+          ${l.note?`<div style="font-size:12px;color:var(--text2);margin-top:3px">${l.note}</div>`:''}
+          <a href="${l.url}" target="_blank" style="color:var(--blue2);font-size:13px;font-weight:500;display:inline-block;margin-top:6px">↗ Open ${l.type}</a>
+        </div>
+        ${canEdit()?`<button class="btn bsm bd" onclick="delReportLink('${l.id}')">Delete</button>`:''}
+      </div>`).join('');
+}
+
+function toggleReportForm(){
+  const fc=document.getElementById('report-form-card');
+  if(fc) fc.style.display=fc.style.display==='none'?'block':'none';
+}
+
+async function addReportLink(){
+  const name=g('rl-name'),url=g('rl-url'),type=g('rl-type'),note=g('rl-note');
+  if(!name||!url){alert('Enter name and URL.');return;}
+  const id=uid();
+  if(!db.reports) db.reports={};
+  db.reports[id]={id,name,url,type,note,by:cu.username,date:dtNow()};
+  await fbSet('reports',db.reports);
+  // notify team
+  users().filter(u=>u.username!==cu.username).forEach(u=>{
+    pushNotif('New report link: '+name,type+' link added by '+cu.fullName,u.username,'report');
+    sendMail(u,'New report link: '+name,`Hi ${u.fullName},\n\n${cu.fullName} added a report link:\n\n${name}\n${type}: ${url}\n${note?'Note: '+note:''}\n\n— Capstone Hub`);
+  });
+  toggleReportForm(); rReport();
+}
+
+async function delReportLink(id){
+  if(!confirm('Delete this link?'))return;
+  delete db.reports[id];
+  await fbSet('reports',db.reports);
+  rReport();
+}
+
+// ══ EMAILJS ══════════════════════════════════════════════════════════════
+function initEJS(){
+  const pk=localStorage.getItem('ejs_pk');
+  if(pk) try{emailjs.init(pk);}catch(e){}
+}
+function ejsReady(){return !!(localStorage.getItem('ejs_pk')&&localStorage.getItem('ejs_sv')&&localStorage.getItem('ejs_tm'));}
+function sendMail(user,subject,body){
+  if(!ejsReady()) return;
+  try{
+    emailjs.send(localStorage.getItem('ejs_sv'),localStorage.getItem('ejs_tm'),
+      {to_email:user.email,to_name:user.fullName,from_name:cu.fullName,subject,message:body}).catch(()=>{});
+  }catch(e){}
+}
+function saveEJS(){
+  const pk=g('ejs-pk'),sv=g('ejs-sv'),tm=g('ejs-tm');
+  if(!pk||!sv||!tm){showEJSSt('⚠ Fill all three fields.','ni-warn');return;}
+  localStorage.setItem('ejs_pk',pk);localStorage.setItem('ejs_sv',sv);localStorage.setItem('ejs_tm',tm);
+  try{emailjs.init(pk);}catch(e){}
+  showEJSSt('✅ Saved! Emails are now active.','ni-ok');
+  document.getElementById('ejs-current').textContent='🟢 Active';
+}
+function testEJS(){
+  if(!ejsReady()){showEJSSt('⚠ Save keys first.','ni-warn');return;}
+  emailjs.send(localStorage.getItem('ejs_sv'),localStorage.getItem('ejs_tm'),
+    {to_email:cu.email,to_name:cu.fullName,from_name:cu.fullName,subject:'Test — Capstone Hub',message:'Email notifications are working correctly!\n\n— Capstone Hub, Project #37'})
+    .then(()=>showEJSSt('✅ Test sent to '+cu.email,'ni-ok'))
+    .catch(e=>showEJSSt('❌ Failed: '+e.text,'ni-warn'));
+}
+function showEJSSt(msg,cls){const el=document.getElementById('ejs-status');el.textContent=msg;el.className='notice '+cls;el.style.display='block';setTimeout(()=>el.style.display='none',6000);}
+function loadEJSSettings(){
+  document.getElementById('ejs-pk').value=localStorage.getItem('ejs_pk')||'';
+  document.getElementById('ejs-sv').value=localStorage.getItem('ejs_sv')||'';
+  document.getElementById('ejs-tm').value=localStorage.getItem('ejs_tm')||'';
+  document.getElementById('ejs-current').textContent=ejsReady()?'🟢 Active — emails enabled':'⚪ Not configured';
+}
+
+
+// ══ REPORT PAGE ══════════════════════════════════════════════════════════
+function rReport(){
+  const canAdd=canEdit();
+  document.getElementById('report-add-btn').innerHTML=canAdd?`<button class="btn bp" onclick="openAddReport()">+ Add Link</button>`:'';
+  document.getElementById('report-add-form').innerHTML='';
+  const reps=Object.values(db.reports||{}).sort((a,b)=>a.date<b.date?1:-1);
+  document.getElementById('report-list').innerHTML=reps.length===0?
+    '<div style="color:var(--text3);text-align:center;padding:24px;font-size:13px">No report links yet.</div>':
+    reps.map(r=>`
+    <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:14px">${r.label}</div>
+          <div style="margin-top:4px"><a href="${r.url}" target="_blank" style="color:var(--blue2);font-size:13px;word-break:break-all">${r.url}</a></div>
+          ${r.desc?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${r.desc}</div>`:''}
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Added by ${un(r.by)} · ${r.date}</div>
+        </div>
+        ${canEdit()||r.by===cu.username?`<button class="btn bsm bd" onclick="delReport('${r.id}')">Delete</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+let addingReport=false;
+function openAddReport(){
+  if(addingReport) return;
+  addingReport=true;
+  document.getElementById('report-add-form').innerHTML=`
+    <div class="card" style="margin-bottom:14px">
+      <div class="ct">Add report link</div>
+      <div class="fgrid">
+        <div class="fg"><label>Label / Task name</label><input id="rl-label" placeholder="e.g. Literature Review — Overleaf"></div>
+        <div class="fg"><label>URL</label><input id="rl-url" placeholder="https://overleaf.com/..."></div>
+        <div class="fg full"><label>Description (optional)</label><input id="rl-desc" placeholder="What this document contains"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn bp" onclick="saveReport()">Add Link</button>
+        <button class="btn bo" onclick="cancelReport()">Cancel</button>
+      </div>
+    </div>`;
+}
+function cancelReport(){addingReport=false;document.getElementById('report-add-form').innerHTML='';}
+async function saveReport(){
+  const label=document.getElementById('rl-label')?.value?.trim();
+  const url=document.getElementById('rl-url')?.value?.trim();
+  if(!label||!url){alert('Fill label and URL.');return;}
+  const id=uid();
+  if(!db.reports) db.reports={};
+  db.reports[id]={id,label,url,desc:document.getElementById('rl-desc')?.value?.trim()||'',by:cu.username,date:dtNow()};
+  await fbSet('reports',db.reports);
+  addingReport=false;
+  rReport();
+  users().filter(u=>u.username!==cu.username).forEach(u=>{
+    pushNotif('New report link: '+label,url.slice(0,50),u.username,'report');
+    sendMail(u,'New report link: '+label,`Hi ${u.fullName},\n\n${cu.fullName} shared a report link:\n\n${label}\n${url}\n\n— Capstone Hub`);
+  });
+}
+async function delReport(id){
+  if(!confirm('Delete this link?')) return;
+  delete db.reports[id];
+  await fbSet('reports',db.reports);
+  rReport();
+}
+
+// close modals on overlay click
+document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+// ══ SIDEBAR TOGGLE ════════════════════════════════════════════════════════
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const main=document.querySelector('.main');
+  const overlay=document.getElementById('sb-overlay');
+  if(window.innerWidth<=768){
+    // mobile: slide in/out as overlay
+    sb.classList.toggle('open');
+    overlay.classList.toggle('open');
+  } else {
+    // desktop: push main content
+    sb.classList.toggle('collapsed');
+    main.classList.toggle('full');
+  }
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('open');
+}
+window.addEventListener('resize',()=>{
+  if(window.innerWidth>768){
+    document.getElementById('sb-overlay').classList.remove('open');
+    document.getElementById('sidebar').classList.remove('open');
+  }
+});
+
+// ══ THEME TOGGLE ══════════════════════════════════════════════════════════
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  document.getElementById('theme-btn').textContent=isLight?'☀':'🌙';
+  localStorage.setItem('cap_theme',isLight?'light':'dark');
+}
+
+// ══ SIMULATION ════════════════════════════════════════════════════════════
+let simInterval=null;
+let simFault=false;
+let simRelayOpen=false;
+
+function initSimulation(){
+  renderBenchGrid();
+  if(simInterval) clearInterval(simInterval);
+  simInterval=setInterval(simTick,1000);
+}
+
+function simTick(){
+  if(simFault&&!simRelayOpen){
+    const v=(4.95+Math.random()*0.06).toFixed(2);
+    const i=(85+Math.random()*20).toFixed(1);
+    const temp=(58+Math.random()*5).toFixed(1);
+    g2('sv1',v+' V','var(--amber)');
+    g2('si1',i+' mA','var(--red)');
+    g2('st1',temp+' °C','var(--red)');
+    document.getElementById('sim-status').className='status-pill sp-warn';
+    document.getElementById('sim-status').textContent='⚠ WARNING';
+    document.getElementById('stud-v').textContent=v+' V'; document.getElementById('stud-v').style.color='var(--amber)';
+    document.getElementById('stud-i').textContent=i+' mA'; document.getElementById('stud-i').style.color='var(--red)';
+    document.getElementById('student-status-pill').className='status-pill'; document.getElementById('student-status-pill').style='background:rgba(255,171,0,.12);color:var(--amber);border:1px solid rgba(255,171,0,.25)'; document.getElementById('student-status-pill').textContent='⚠ Warning';
+    if(parseFloat(i)>100){
+      setTimeout(simAutoRelay,1500);
+    }
+  } else if(!simRelayOpen){
+    const v=(4.97+Math.random()*0.02-0.01).toFixed(2);
+    const i=(10+Math.random()*0.6-0.3).toFixed(1);
+    const temp=(42+Math.random()*0.5).toFixed(1);
+    g2('sv1',v+' V','var(--green)');
+    g2('si1',i+' mA','var(--blue2)');
+    g2('st1',temp+' °C','var(--amber)');
+    document.getElementById('sim-status').className='status-pill sp-safe';
+    document.getElementById('sim-status').textContent='● SAFE';
+    document.getElementById('stud-v').textContent=v+' V'; document.getElementById('stud-v').style.color='var(--green)';
+    document.getElementById('stud-i').textContent=i+' mA'; document.getElementById('stud-i').style.color='var(--blue2)';
+    document.getElementById('student-status-pill').className='status-pill'; document.getElementById('student-status-pill').style='background:rgba(0,217,126,.1);color:var(--green);border:1px solid rgba(0,217,126,.2)'; document.getElementById('student-status-pill').textContent='✅ Safe';
+  }
+}
+function g2(id,val,color){const el=document.getElementById(id);if(el){el.textContent=val;el.style.color=color;}}
+
+function simAutoRelay(){
+  if(simRelayOpen) return;
+  simRelayOpen=true;
+  simFault=false;
+  document.getElementById('sim-status').className='status-pill sp-danger';
+  document.getElementById('sim-status').textContent='🔴 RELAY OPEN';
+  document.getElementById('sim-fault-btn').disabled=true;
+  g2('sv1','0.00 V','var(--text3)'); g2('si1','0.0 mA','var(--text3)');
+  g2('l2-status','● OPEN — Power Cut','var(--red)');
+  document.getElementById('student-status-pill').style='background:rgba(255,74,110,.12);color:var(--red);border:1px solid rgba(255,74,110,.25)';
+  document.getElementById('student-status-pill').textContent='🔴 Power Cut';
+  addSimLog('> [RELAY] Overcurrent detected: 102.4 mA — RELAY OPENED');
+  addSimLog('> [ALERT] Notification sent to instructor dashboard');
+  addSimLog('> [LLM] Voice: "Overcurrent detected. Power cut to bench. Check wiring."');
+  renderBenchGrid();
+}
+
+function simTriggerFault(){
+  simFault=true;
+  addSimLog('> [SENSOR] Current rising: 42mA → 67mA → 89mA → ...');
+  addSimLog('> [ANOMALY] Isolation Forest: score=-1 (ANOMALY)');
+  addSimLog('> [LLM] Voice: "Warning — current is approaching safe limit"');
+  renderBenchGrid();
+}
+
+function simReset(){
+  simFault=false; simRelayOpen=false;
+  document.getElementById('sim-fault-btn').disabled=false;
+  document.getElementById('sim-status').className='status-pill sp-safe';
+  document.getElementById('sim-status').textContent='● SAFE';
+  g2('l2-status','● Closed','var(--green)');
+  addSimLog('> [RESET] System reset — relay closed — monitoring resumed');
+  renderBenchGrid();
+}
+
+function simCutAll(){
+  addSimLog('> [INSTRUCTOR] All benches power cut manually');
+  renderBenchGrid(true);
+}
+function simRestoreAll(){
+  addSimLog('> [INSTRUCTOR] All benches power restored');
+  renderBenchGrid(false);
+}
+
+function renderBenchGrid(cutAll){
+  const statuses=['✅','✅','⚠️','✅','🔴','✅','✅','⚠️','✅'];
+  const labels=['Safe','Safe','Warning','Safe','Fault','Safe','Safe','Warning','Safe'];
+  const colors=['var(--green)','var(--green)','var(--amber)','var(--green)','var(--red)','var(--green)','var(--green)','var(--amber)','var(--green)'];
+  if(simRelayOpen){statuses[0]='🔴';labels[0]='Fault';colors[0]='var(--red)';}
+  const el=document.getElementById('bench-grid');
+  if(!el) return;
+  el.innerHTML=statuses.map((s,i)=>{
+    const num=String(i+1).padStart(2,'0');
+    const bc=cutAll?'var(--red)':colors[i];
+    return '<div class="bench-card" onclick="addSimLog(\'> [INSTRUCTOR] Bench '+num+' — manual override\')" style="cursor:pointer;border-color:'+bc+'">'
+      +'<div class="bench-num">Bench '+num+'</div>'
+      +'<div class="bench-status">'+(cutAll?'🔴':s)+'</div>'
+      +'<div style="font-size:10px;color:'+bc+'">'+(cutAll?'Cut':labels[i])+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function addSimLog(msg){
+  const el=document.getElementById('sim-log');
+  if(!el) return;
+  const d=document.createElement('div');
+  d.textContent=msg;
+  el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+}
+
+const simAnswers={
+  'Is my current too high for this LED?':'Your circuit is drawing 10.2 mA. The standard 5mm red LED has a max continuous current of 20 mA. You are within safe limits ✓',
+  'What does this warning mean?':'A warning means the current or temperature is approaching the safe limit defined in the component datasheet. Reduce load or check wiring.',
+  'My circuit is not working, help me debug':'Check: (1) power rail connections, (2) component orientation, (3) resistor values vs expected. Current reads 10.2 mA which seems low — verify your VCC connection.',
+  'Is 42°C safe for the LM7805?':'The LM7805 maximum junction temperature is 125°C. At 42°C you are well within limits. Normal operating range is 40–80°C ✓',
+  'What is the maximum current for a NE555?':'The NE555 timer maximum supply current is 200 mA, and output source/sink current is 200 mA peak. Your current reading is 10.2 mA — completely safe.'
+};
+function simAsk(){
+  const q=document.getElementById('sim-q').value;
+  const chat=document.getElementById('sim-chat');
+  const sq=document.createElement('div'); sq.className='chat-msg chat-student'; sq.textContent=q; chat.appendChild(sq);
+  setTimeout(()=>{
+    const ar=document.createElement('div'); ar.className='chat-msg chat-ai';
+    ar.textContent='🤖 '+( simAnswers[q]||'I am analyzing your circuit and sensor readings. Please wait...');
+    chat.appendChild(ar); chat.scrollTop=chat.scrollHeight;
+  },700);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+</script>
+</body>
+</html>
